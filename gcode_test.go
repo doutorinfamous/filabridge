@@ -123,8 +123,8 @@ func TestResolveFilamentUsageSnapmakerExtrudersUsed(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruders_used" {
-		t.Fatalf("expected snapmaker_extruders_used, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruders_used:main" {
+		t.Fatalf("expected snapmaker_extruders_used:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 8.61 {
 		t.Fatalf("expected extruder 1 usage 8.61g, got %v", resolution.Usage)
@@ -156,8 +156,8 @@ func TestResolveFilamentUsageSnapmakerExtrudersUsedCommaFormat(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruders_used" {
-		t.Fatalf("expected snapmaker_extruders_used, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruders_used:main" {
+		t.Fatalf("expected snapmaker_extruders_used:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 76.35 {
 		t.Fatalf("expected extruder 1 usage 76.35g, got %v", resolution.Usage)
@@ -172,8 +172,8 @@ func TestResolveFilamentUsageSnapmakerExtruderMapTable(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruder_map" {
-		t.Fatalf("expected snapmaker_extruder_map, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruder_map:main" {
+		t.Fatalf("expected snapmaker_extruder_map:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 76.35 {
 		t.Fatalf("expected extruder 1 usage 76.35g, got %v", resolution.Usage)
@@ -187,8 +187,8 @@ func TestResolveFilamentUsageSnapmakerExtruderMapTableTwoColors(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruder_map" {
-		t.Fatalf("expected snapmaker_extruder_map, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruder_map:main" {
+		t.Fatalf("expected snapmaker_extruder_map:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 50 {
 		t.Fatalf("expected extruder 1 usage 50g, got %v", resolution.Usage)
@@ -205,8 +205,8 @@ func TestResolveFilamentUsageSnapmakerExtrudersUsedTwoColors(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruders_used" {
-		t.Fatalf("expected snapmaker_extruders_used, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruders_used:main" {
+		t.Fatalf("expected snapmaker_extruders_used:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 50 {
 		t.Fatalf("expected extruder 1 usage 50g, got %v", resolution.Usage)
@@ -254,8 +254,8 @@ func TestResolveFilamentUsageSnapmakerExtruderMapTableRemapsFilamentWeights(t *t
 	}
 
 	resolution := ResolveFilamentUsage([]byte("; no gcode footer"), metadata)
-	if resolution.Source != "snapmaker_extruder_map" {
-		t.Fatalf("expected snapmaker_extruder_map, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruder_map:main" {
+		t.Fatalf("expected snapmaker_extruder_map:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 76.35 {
 		t.Fatalf("expected extruder 1 usage 76.35g, got %v", resolution.Usage)
@@ -269,10 +269,63 @@ func TestRemapSnapmakerExtruderUsageGcodeTotal(t *testing.T) {
 	}
 
 	resolution := ResolveFilamentUsage(content, metadata)
-	if resolution.Source != "snapmaker_extruders_used" {
-		t.Fatalf("expected snapmaker_extruders_used, got %s", resolution.Source)
+	if resolution.Source != "snapmaker_extruders_used:main" {
+		t.Fatalf("expected snapmaker_extruders_used:main, got %s", resolution.Source)
 	}
 	if resolution.Usage[1] != 42.5 {
 		t.Fatalf("expected extruder 1 usage 42.5g, got %v", resolution.Usage)
+	}
+}
+
+func owlMainExtruderMapTable() []int {
+	return []int{0, 1, 2, 3, 0, 0, 0, 0}
+}
+
+func owlReprintExtruderMapTable() []int {
+	return []int{0, 1, 3, 3, 0, 2, 0, 0}
+}
+
+func TestScoreExtruderMapTableOwlPrefersReprint(t *testing.T) {
+	logical := map[int]float64{0: 47.18, 1: 8.46, 2: 4.34, 5: 22.42}
+	mainScore := scoreExtruderMapTable(logical, owlMainExtruderMapTable())
+	reprintScore := scoreExtruderMapTable(logical, owlReprintExtruderMapTable())
+	if reprintScore <= mainScore {
+		t.Fatalf("reprint score %d should beat main score %d", reprintScore, mainScore)
+	}
+}
+
+func TestSelectExtruderMapTableOwl(t *testing.T) {
+	logical := map[int]float64{0: 47.18, 1: 8.46, 2: 4.34, 5: 22.42}
+	_, _, source := selectExtruderMapTable(
+		logical,
+		owlMainExtruderMapTable(),
+		owlReprintExtruderMapTable(),
+		[]bool{false, false, false, false},
+		[]bool{true, true, true, true},
+	)
+	if source != "reprint_info" {
+		t.Fatalf("expected reprint_info, got %s", source)
+	}
+}
+
+func TestResolveFilamentUsageSnapmakerOwlMultiMaterial(t *testing.T) {
+	content := []byte(`; filament used [g] = 47.18, 8.46, 4.34, 0.00, 0.00, 22.42`)
+	metadata := &FilamentUsageMetadata{
+		ExtruderMapTable:        owlMainExtruderMapTable(),
+		ReprintExtruderMapTable: owlReprintExtruderMapTable(),
+		ExtrudersUsed:           []bool{false, false, false, false},
+		ReprintExtrudersUsed:    []bool{true, true, true, true},
+	}
+
+	resolution := ResolveFilamentUsage(content, metadata)
+	if resolution.Source != "snapmaker_extruder_map:reprint_info" {
+		t.Fatalf("expected snapmaker_extruder_map:reprint_info, got %s", resolution.Source)
+	}
+
+	want := map[int]float64{0: 47.18, 1: 8.46, 2: 22.42, 3: 4.34}
+	for k, v := range want {
+		if resolution.Usage[k] != v {
+			t.Fatalf("extruder %d: got %v want %v (full: %v)", k, resolution.Usage[k], v, resolution.Usage)
+		}
 	}
 }

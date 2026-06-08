@@ -88,12 +88,23 @@ type moonrakerFileMetadataResult struct {
 	ReferencedTools     []int     `json:"referenced_tools"`
 }
 
-type moonrakerPrintTaskConfigResult struct {
+type moonrakerReprintInfo struct {
 	ExtruderMapTable []int  `json:"extruder_map_table"`
 	ExtrudersUsed    []bool `json:"extruders_used"`
-	ReprintInfo      struct {
-		ExtrudersUsed []bool `json:"extruders_used"`
-	} `json:"reprint_info"`
+}
+
+type moonrakerPrintTaskConfigResult struct {
+	ExtruderMapTable []int                `json:"extruder_map_table"`
+	ExtrudersUsed    []bool               `json:"extruders_used"`
+	ReprintInfo      moonrakerReprintInfo `json:"reprint_info"`
+}
+
+// SnapmakerExtruderMapping holds main and reprint extruder maps from print_task_config.
+type SnapmakerExtruderMapping struct {
+	MapTable             []int
+	ReprintMapTable      []int
+	ExtrudersUsed        []bool
+	ReprintExtrudersUsed []bool
 }
 
 type moonrakerObjectsQueryPrintTaskResult struct {
@@ -458,36 +469,43 @@ func (c *SnapmakerU1MoonrakerClient) GetFileMetadata(filename string) (*moonrake
 	return &metadata, nil
 }
 
-// GetPrintTaskFilamentMapping returns Snapmaker print_task_config mapping for the current/last print:
-// extruder_map_table (virtual/logical slot -> physical extruder) and extruders_used.
-func (c *SnapmakerU1MoonrakerClient) GetPrintTaskFilamentMapping() (extruderMapTable []int, extrudersUsed []bool) {
+// GetPrintTaskFilamentMapping returns Snapmaker print_task_config mapping for the current/last print.
+func (c *SnapmakerU1MoonrakerClient) GetPrintTaskFilamentMapping() SnapmakerExtruderMapping {
 	body, err := c.doRequest(http.MethodGet, "/printer/objects/query?print_task_config")
 	if err != nil {
-		return nil, nil
+		return SnapmakerExtruderMapping{}
 	}
 
 	var envelope moonrakerResponse
 	if err := json.Unmarshal(body, &envelope); err != nil {
-		return nil, nil
+		return SnapmakerExtruderMapping{}
 	}
 	if envelope.Error != nil {
-		return nil, nil
+		return SnapmakerExtruderMapping{}
 	}
 
 	var result moonrakerObjectsQueryPrintTaskResult
 	if err := json.Unmarshal(envelope.Result, &result); err != nil {
-		return nil, nil
+		return SnapmakerExtruderMapping{}
 	}
 
 	cfg := result.Status.PrintTaskConfig
-	extruderMapTable = cfg.ExtruderMapTable
-	if countTrue(cfg.ExtrudersUsed) > 0 {
-		extrudersUsed = cfg.ExtrudersUsed
-	} else if countTrue(cfg.ReprintInfo.ExtrudersUsed) > 0 {
-		extrudersUsed = cfg.ReprintInfo.ExtrudersUsed
+	return SnapmakerExtruderMapping{
+		MapTable:             cfg.ExtruderMapTable,
+		ReprintMapTable:      cfg.ReprintInfo.ExtruderMapTable,
+		ExtrudersUsed:        cfg.ExtrudersUsed,
+		ReprintExtrudersUsed: cfg.ReprintInfo.ExtrudersUsed,
 	}
+}
 
-	return extruderMapTable, extrudersUsed
+func applySnapmakerExtruderMapping(metadata *FilamentUsageMetadata, mapping SnapmakerExtruderMapping) {
+	if metadata == nil {
+		return
+	}
+	metadata.ExtruderMapTable = mapping.MapTable
+	metadata.ReprintExtruderMapTable = mapping.ReprintMapTable
+	metadata.ExtrudersUsed = mapping.ExtrudersUsed
+	metadata.ReprintExtrudersUsed = mapping.ReprintExtrudersUsed
 }
 
 func countTrue(flags []bool) int {
@@ -518,7 +536,7 @@ func (c *SnapmakerU1MoonrakerClient) ParseFilamentUsageFromFile(filename string,
 	if metadata == nil {
 		metadata = &FilamentUsageMetadata{}
 	}
-	metadata.ExtruderMapTable, metadata.ExtrudersUsed = c.GetPrintTaskFilamentMapping()
+	applySnapmakerExtruderMapping(metadata, c.GetPrintTaskFilamentMapping())
 
 	resolution := ResolveFilamentUsage(gcodeContent, metadata)
 	logFilamentUsageResolution(filename, resolution.Source, resolution.Usage)

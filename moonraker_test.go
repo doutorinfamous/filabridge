@@ -135,3 +135,41 @@ func TestEscapeMoonrakerFilePath(t *testing.T) {
 		t.Fatalf("expected %q, got %q", want, got)
 	}
 }
+
+func TestParsePrintTaskConfigReprintExtruderMapTable(t *testing.T) {
+	payload := []byte(`{
+		"result": {
+			"status": {
+				"print_task_config": {
+					"extruder_map_table": [0, 1, 2, 3, 0, 0],
+					"extruders_used": [false, false, false, false],
+					"reprint_info": {
+						"extruder_map_table": [0, 1, 3, 3, 0, 2],
+						"extruders_used": [true, true, true, true]
+					}
+				}
+			}
+		}
+	}`)
+
+	var envelope moonrakerResponse
+	if err := json.Unmarshal(payload, &envelope); err != nil {
+		t.Fatalf("failed to decode envelope: %v", err)
+	}
+
+	var result moonrakerObjectsQueryPrintTaskResult
+	if err := json.Unmarshal(envelope.Result, &result); err != nil {
+		t.Fatalf("failed to decode result: %v", err)
+	}
+
+	cfg := result.Status.PrintTaskConfig
+	if len(cfg.ReprintInfo.ExtruderMapTable) != 6 {
+		t.Fatalf("expected 6 reprint map entries, got %d", len(cfg.ReprintInfo.ExtruderMapTable))
+	}
+	if cfg.ReprintInfo.ExtruderMapTable[5] != 2 {
+		t.Fatalf("expected reprint map index 5 -> 2, got %d", cfg.ReprintInfo.ExtruderMapTable[5])
+	}
+	if !cfg.ReprintInfo.ExtrudersUsed[0] || !cfg.ReprintInfo.ExtrudersUsed[3] {
+		t.Fatalf("expected all reprint extruders used, got %v", cfg.ReprintInfo.ExtrudersUsed)
+	}
+}

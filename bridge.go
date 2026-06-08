@@ -1238,11 +1238,8 @@ func (b *FilamentBridge) handlePrintFinished(printerID string, config PrinterCon
 			if weight := b.filamentUsageFromPrintStats(printerName, printerStatus.FilamentUsed); weight > 0 {
 				log.Printf("Using print_stats.filament_used fallback: %.2fmm -> %.2fg", printerStatus.FilamentUsed, weight)
 				logical := map[int]float64{0: weight}
-				mapTable, extrudersUsed := client.GetPrintTaskFilamentMapping()
-				meta := &FilamentUsageMetadata{
-					ExtruderMapTable: mapTable,
-					ExtrudersUsed:    extrudersUsed,
-				}
+				meta := &FilamentUsageMetadata{}
+				applySnapmakerExtruderMapping(meta, client.GetPrintTaskFilamentMapping())
 				if remapped, _, ok := remapSnapmakerExtruderUsage(logical, meta); ok {
 					filamentUsage = remapped
 				} else {
