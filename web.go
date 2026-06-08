@@ -514,15 +514,37 @@ func (ws *WebServer) mapToolheadHandler(c *gin.Context) {
 
 	// Handle unmapping (SpoolID = 0) or mapping (SpoolID > 0)
 	if req.SpoolID == 0 {
-		// Unmap the toolhead
+		previousSpoolID, err := ws.bridge.GetToolheadMapping(req.PrinterName, req.ToolheadID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
 		if err := ws.bridge.UnmapToolhead(req.PrinterName, req.ToolheadID); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		if previousSpoolID > 0 {
+			enabled, err := ws.bridge.GetAutoAssignPreviousSpoolEnabled()
+			if err == nil && enabled {
+				locationName, err := ws.bridge.GetAutoAssignPreviousSpoolLocation()
+				if err == nil && locationName != "" {
+					location, err := ws.bridge.spoolman.FindLocationByName(locationName)
+					if err == nil && location != nil {
+						if err := ws.bridge.AssignSpoolToLocation(previousSpoolID, "", 0, locationName, false); err != nil {
+							log.Printf("Warning: Failed to auto-assign unmapped spool %d to location '%s': %v", previousSpoolID, locationName, err)
+						}
+					}
+				}
+			}
+		}
+
+		ws.BroadcastStatus()
 		c.JSON(http.StatusOK, gin.H{"message": "Toolhead unmapped successfully"})
 	} else {
-		// Map the spool to the toolhead
-		if err := ws.bridge.SetToolheadMapping(req.PrinterName, req.ToolheadID, req.SpoolID); err != nil {
+		// Map the spool to the toolhead and sync location to Spoolman (same as NFC/QR)
+		if err := ws.bridge.AssignSpoolToLocation(req.SpoolID, req.PrinterName, req.ToolheadID, "", true); err != nil {
 			// Check if this is a spool conflict error
 			if strings.Contains(err.Error(), "is already assigned to") {
 				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -531,6 +553,7 @@ func (ws *WebServer) mapToolheadHandler(c *gin.Context) {
 			}
 			return
 		}
+		ws.BroadcastStatus()
 		c.JSON(http.StatusOK, gin.H{"message": "Toolhead mapped successfully"})
 	}
 }
