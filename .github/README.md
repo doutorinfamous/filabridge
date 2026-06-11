@@ -124,8 +124,12 @@ The docker-compose.yml automatically sets the `FILABRIDGE_DB_PATH` environment v
    ```bash
    git clone https://github.com/needo37/filabridge.git
    cd filabridge
-   go mod download
-   go build -o filabridge .
+
+   # Backend (Go API — porta 5001)
+   cd backend && go build -o filabridge . && cd ..
+
+   # Front-end (Next.js — porta 5000, faz proxy para a API)
+   cd web && npm install && npm run build && cd ..
    ```
 
 2. **Run Spoolman** (if not already running):
@@ -217,17 +221,27 @@ The web interface also provides REST API endpoints:
 
 ```
 filabridge/
-├── main.go                 # Application entry point
-├── config.go              # Configuration management
-├── prusalink.go           # PrusaLink API client
-├── spoolman.go            # Spoolman API client
-├── bridge.go              # Core monitoring and tracking logic
-├── nfc.go                 # NFC session management and tag handling
-├── web.go                 # HTTP server and web interface
-├── templates/             # HTML templates
-├── go.mod                 # Go module definition
-└── README.md              # Documentation
+├── backend/               # Go API (porta interna 5001)
+│   ├── main.go            # Entry point (--web-only / --bridge-only / --port)
+│   ├── core/              # Bridge, SQLite, config e contabilidade de filamento
+│   ├── snapmaker/         # Snapmaker U1: cliente Moonraker, G-code, monitor
+│   ├── bambu/             # Bambu Lab: descoberta HA, AMS trays, webhooks, YAML
+│   ├── spoolman/          # Cliente da API do Spoolman
+│   ├── homeassistant/     # Cliente REST/WebSocket do Home Assistant
+│   ├── nfc/               # Sessões NFC (spool + local)
+│   └── server/            # API HTTP (Gin) + WebSocket /ws/status
+├── web/                   # Front-end Next.js + shadcn/ui (porta 5000)
+│   ├── app/               # Dashboard, NFC, Configurações + proxy /api
+│   ├── components/        # Componentes (cards de impressora, comboboxes, etc.)
+│   └── lib/               # Cliente da API, tipos e hook do WebSocket
+├── docker/entrypoint.sh   # Sobe Go (5001) + Next.js (5000) no mesmo container
+├── Dockerfile             # Build multi-stage (Go + Node)
+└── docker-compose.yml
 ```
+
+The Next.js server is the single entry point (port **5000**): it serves the UI and
+proxies `/api/*` and `/ws/*` to the Go backend on the internal port 5001, so all
+API paths remain exactly the same as before.
 
 ## Troubleshooting
 
@@ -278,21 +292,21 @@ The service logs important events to the console. Look for:
 
 ## Development
 
-### Building from Source
-
 ```bash
-# Download dependencies
-go mod download
-
-# Build the application
-go build -o filabridge .
-
-# Run tests
+# Backend (Go API em http://localhost:5001)
+cd backend
+go build ./...
 go test ./...
+go run . --port 5001
 
-# Run with race detection
-go run -race .
+# Front-end (UI em http://localhost:5000, com proxy para a API)
+cd web
+npm install
+npm run dev -- -p 5000
 ```
+
+Acesse `http://localhost:5000` — o Next.js encaminha `/api/*` e `/ws/*` para o
+backend Go automaticamente (configurável via `BACKEND_URL`).
 
 ## Contributing
 

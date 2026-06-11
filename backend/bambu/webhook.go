@@ -1,0 +1,173 @@
+package bambu
+
+import (
+	"fmt"
+	"log"
+	"strings"
+
+	"filabridge/core"
+	"filabridge/homeassistant"
+	"filabridge/spoolman"
+)
+
+// ProcessWebhook handles tray_change and spool_usage events from Home Assistant.
+func ProcessWebhook(b *core.FilamentBridge, payload WebhookPayload, ha *homeassistant.Client) WebhookResult {
+	if b.Spoolman == nil || b.Config.SpoolmanURL == "" {
+		return WebhookResult{Status: "ignored", Reason: "spoolman not configured"}
+	}
+
+	idMap := map[string]string{}
+	if ha != nil {
+		if m, err := ha.GetEntityIdToUniqueIdMap(); err == nil {
+			idMap = m
+		}
+	}
+
+	switch payload.Event {
+	case "spool_usage":
+		result := processSpoolUsage(b, payload, ha, idMap)
+		logWebhookResult("spool_usage", payload.ActiveTrayID, result)
+		return result
+	case "tray_change":
+		result := processTrayChange(b, payload, ha, idMap)
+		logWebhookResult("tray_change", payload.TrayEntityID, result)
+		return result
+	default:
+		return WebhookResult{Status: "ignored", Reason: "unknown event"}
+	}
+}
+
+func logWebhookResult(event, trayID string, result WebhookResult) {
+	switch result.Status {
+	case "success":
+		log.Printf("Webhook %s (%s): success spool=#%d action=%s deducted=%.2fg", event, trayID, result.SpoolID, result.Action, result.Deducted)
+	case "no_match":
+		log.Printf("Webhook %s (%s): no spool assigned — assign bobina no FilaBridge primeiro", event, trayID)
+	case "ignored":
+		log.Printf("Webhook %s (%s): ignored — %s", event, trayID, result.Reason)
+	default:
+		log.Printf("Webhook %s (%s): %s — %s", event, trayID, result.Status, result.Message)
+	}
+}
+
+// resolveTrayUniqueID maps a HA entity_id (or unique_id) to the tray unique_id stored in Spoolman.
+func resolveTrayUniqueID(b *core.FilamentBridge, trayRef string, ha *homeassistant.Client, idMap map[string]string) string {
+	if trayRef == "" {
+		return ""
+	}
+	if ha != nil {
+		if uid := ha.ResolveToUniqueID(trayRef, idMap); uid != trayRef {
+			return uid
+		}
+	}
+	if tray, err := FindTrayByEntityID(b, trayRef); err == nil && tray != nil {
+		return tray.UniqueID
+	}
+	candidate := trayRef
+	if strings.HasPrefix(candidate, "sensor.") {
+		candidate = strings.TrimPrefix(candidate, "sensor.")
+	}
+	if tray, err := FindTrayByUniqueID(b, candidate); err == nil && tray != nil {
+		return tray.UniqueID
+	}
+	return candidate
+}
+
+func processSpoolUsage(b *core.FilamentBridge, payload WebhookPayload, ha *homeassistant.Client, idMap map[string]string) WebhookResult {
+	weight := payload.UsedWeight
+	lengthConverted := false
+	if weight <= 0 && payload.UsedLength > 0 {
+		weight = spoolman.LengthToWeight(payload.UsedLength, payload.Material)
+		lengthConverted = true
+	}
+	if weight <= 0 {
+		return WebhookResult{Status: "ignored", Reason: "no weight to deduct"}
+	}
+	if payload.ActiveTrayID == "" {
+		return WebhookResult{Status: "ignored", Reason: "no active_tray_id provided"}
+	}
+
+	trayUniqueID := resolveTrayUniqueID(b, payload.ActiveTrayID, ha, idMap)
+
+	spool, err := b.Spoolman.FindSpoolByActiveTray(payload.ActiveTrayID, trayUniqueID)
+	if err != nil {
+		return WebhookResult{Status: "error", Message: err.Error()}
+	}
+	if spool == nil {
+		return WebhookResult{
+			Status:  "no_match",
+			Message: fmt.Sprintf("No spool assigned to tray %s. Assign a spool in FilaBridge first.", payload.ActiveTrayID),
+		}
+	}
+
+	if lengthConverted && spool.Filament != nil && spool.Filament.Material != "" {
+		weight = spoolman.LengthToWeight(payload.UsedLength, spool.Filament.Material)
+	}
+
+	if err := b.Spoolman.UseSpoolWeight(spool.ID, weight); err != nil {
+		return WebhookResult{Status: "error", Message: err.Error()}
+	}
+
+	tagStored := false
+	if spoolman.IsValidTrayUUID(payload.TrayUUID) {
+		existing := spoolman.GetSpoolExtraString(spool, spoolman.ExtraFieldTag)
+		if existing != payload.TrayUUID {
+			if err := b.Spoolman.SetSpoolTag(spool.ID, payload.TrayUUID); err != nil {
+				log.Printf("Warning: failed to store RFID tag on spool #%d: %v", spool.ID, err)
+			} else {
+				tagStored = true
+				log.Printf("Stored spool serial %q on spool #%d", payload.TrayUUID, spool.ID)
+			}
+		}
+	}
+
+	return WebhookResult{
+		Status:    "success",
+		SpoolID:   spool.ID,
+		Deducted:  weight,
+		TagStored: tagStored,
+	}
+}
+
+func processTrayChange(b *core.FilamentBridge, payload WebhookPayload, ha *homeassistant.Client, idMap map[string]string) WebhookResult {
+	if payload.TrayEntityID == "" {
+		return WebhookResult{Status: "ignored", Reason: "no tray_entity_id"}
+	}
+
+	trayUniqueID := resolveTrayUniqueID(b, payload.TrayEntityID, ha, idMap)
+
+	name := strings.TrimSpace(payload.Name)
+	trayEmpty := name == "" || strings.EqualFold(name, "empty") || name == "unavailable"
+
+	if trayEmpty {
+		spool, err := b.Spoolman.FindSpoolByActiveTray(payload.TrayEntityID, trayUniqueID)
+		if err != nil {
+			return WebhookResult{Status: "error", Message: err.Error()}
+		}
+		if spool == nil {
+			return WebhookResult{Status: "ignored", Reason: "tray empty and no spool was assigned"}
+		}
+		if err := UnassignTray(b, trayUniqueID); err != nil {
+			return WebhookResult{Status: "error", Message: err.Error()}
+		}
+		return WebhookResult{Status: "success", Action: "unassigned", SpoolID: spool.ID, Reason: "tray_empty"}
+	}
+
+	if !spoolman.IsValidTrayUUID(payload.TrayUUID) {
+		return WebhookResult{Status: "ignored", Reason: "no valid RFID tag for auto-assign"}
+	}
+
+	spool, err := b.Spoolman.FindSpoolByTag(payload.TrayUUID)
+	if err != nil {
+		return WebhookResult{Status: "error", Message: err.Error()}
+	}
+	if spool == nil {
+		return WebhookResult{Status: "ignored", Reason: "no spool found for RFID tag"}
+	}
+
+	if err := b.Spoolman.AssignSpoolToTray(spool.ID, trayUniqueID); err != nil {
+		return WebhookResult{Status: "error", Message: err.Error()}
+	}
+
+	return WebhookResult{Status: "success", Action: "assigned", SpoolID: spool.ID}
+}

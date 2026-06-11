@@ -36,7 +36,7 @@ jobs:
           GOOS: linux
           GOARCH: amd64
         run: |
-          go build -o filabridge-linux-amd64 .
+          go build -C backend -o "$PWD/filabridge-linux-amd64" .
           chmod +x filabridge-linux-amd64
 
       - name: Build for Linux ARM64
@@ -46,7 +46,7 @@ jobs:
           GOARCH: arm64
           CC: aarch64-linux-gnu-gcc
         run: |
-          go build -o filabridge-linux-arm64 .
+          go build -C backend -o "$PWD/filabridge-linux-arm64" .
           chmod +x filabridge-linux-arm64
 
       - name: Build for Windows AMD64
@@ -56,7 +56,7 @@ jobs:
           GOARCH: amd64
           CC: x86_64-w64-mingw32-gcc
         run: |
-          go build -o filabridge-windows-amd64.exe .
+          go build -C backend -o "$PWD/filabridge-windows-amd64.exe" .
 
       - name: Build for macOS AMD64
         env:
@@ -64,7 +64,7 @@ jobs:
           GOOS: darwin
           GOARCH: amd64
         run: |
-          go build -o filabridge-darwin-amd64 .
+          go build -C backend -o "$PWD/filabridge-darwin-amd64" .
           chmod +x filabridge-darwin-amd64
 
       - name: Build for macOS ARM64
@@ -73,7 +73,7 @@ jobs:
           GOOS: darwin
           GOARCH: arm64
         run: |
-          go build -o filabridge-darwin-arm64 .
+          go build -C backend -o "$PWD/filabridge-darwin-arm64" .
           chmod +x filabridge-darwin-arm64
 
       - name: Create checksums
@@ -393,11 +393,15 @@ jobs:
             
             ### Quick Start
             
+            > Note: the standalone binaries ship the FilaBridge **API only** (default port 5001).
+            > The full experience (API + web UI on port 5000) is provided by the Docker image,
+            > which bundles the Go backend and the Next.js front-end.
+            
             1. Download the binary for your platform
             2. Make it executable (Linux/macOS): `chmod +x filabridge-*`
             3. Run Spoolman: `docker run -d --name spoolman -p 8000:8000 ghcr.io/donkie/spoolman:latest`
-            4. Start FilaBridge: `./filabridge-*`
-            5. Open http://localhost:5000 and configure your printers
+            4. Start the API: `./filabridge-*`
+            5. Recommended: `docker compose up -d` for API + web UI at http://localhost:5000
             
             ## Verify Downloads
             

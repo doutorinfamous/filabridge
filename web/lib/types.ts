@@ -1,0 +1,179 @@
+// Types mirroring the Go backend JSON payloads.
+
+export interface SpoolFilament {
+  id: number;
+  name: string;
+  material: string;
+  density: number;
+  diameter: number;
+  color_hex: string;
+  settings_extruder_temp: number;
+  settings_bed_temp: number;
+  vendor?: { id: number; name: string } | null;
+}
+
+export interface Spool {
+  id: number;
+  name: string;
+  brand: string;
+  material: string;
+  location: string;
+  remaining_weight: number;
+  used_weight: number;
+  filament?: SpoolFilament | null;
+}
+
+export interface Filament {
+  id: number;
+  name: string;
+  material: string;
+  color_hex: string;
+  diameter: number;
+  density: number;
+  settings_extruder_temp: number;
+  settings_bed_temp: number;
+  vendor?: { id: number; name: string } | null;
+}
+
+export interface PrinterData {
+  name: string;
+  state: string;
+  job_name?: string;
+  progress?: number;
+  print_duration?: number;
+  time_remaining?: number | null;
+  current_layer?: number | null;
+  total_layer?: number | null;
+}
+
+export interface ToolheadMapping {
+  printer_name: string;
+  toolhead_id: number;
+  spool_id: number;
+  display_name?: string;
+}
+
+export interface PrintError {
+  id: string;
+  printer_name: string;
+  filename: string;
+  error: string;
+  timestamp: string;
+  acknowledged: boolean;
+}
+
+export interface StatusMessage {
+  type: string;
+  timestamp: string;
+  printers: Record<string, PrinterData>;
+  spools: Spool[];
+  toolhead_mappings: Record<string, Record<number, ToolheadMapping>>;
+  print_errors?: PrintError[];
+}
+
+export interface PrinterConfigInfo {
+  name: string;
+  model: string;
+  driver: string;
+  ip_address: string;
+  api_key: string;
+  toolheads: number;
+  ha_prefix?: string;
+  ha_device_id?: string;
+  toolhead_names?: Record<number, string>;
+}
+
+export interface BambuTray {
+  entity_id: string;
+  unique_id: string;
+  tray_number: number;
+  ams_number: number;
+  is_external: boolean;
+  name?: string;
+  color?: string;
+  material?: string;
+  remaining_weight?: number;
+  display_name?: string;
+  assigned_spool_id?: number | null;
+}
+
+export interface BambuAMS {
+  entity_id: string;
+  name: string;
+  ams_number: number;
+  trays: BambuTray[];
+}
+
+export interface BambuPrinter {
+  entity_id: string;
+  device_id: string;
+  prefix: string;
+  name: string;
+  state?: string;
+  job_name?: string;
+  progress?: number;
+  print_duration?: number;
+  time_remaining?: number | null;
+  current_layer?: number | null;
+  total_layer?: number | null;
+  ams_units: BambuAMS[] | null;
+  external_spools: BambuTray[] | null;
+  registered?: boolean;
+  printer_id?: string;
+}
+
+export interface NfcUrlEntry {
+  type: "spool" | "filament" | "location";
+  url: string;
+  qr_code_base64: string;
+  // spool
+  spool_id?: number;
+  spool_name?: string;
+  remaining_weight?: number;
+  // filament
+  filament_id?: number;
+  filament_name?: string;
+  extruder_temp?: number;
+  bed_temp?: number;
+  diameter?: number;
+  density?: number;
+  // shared
+  material?: string;
+  brand?: string;
+  color_hex?: string;
+  // location
+  location_type?: string;
+  location_name?: string;
+  display_name?: string;
+  printer_name?: string;
+  tray_unique_id?: string;
+}
+
+export interface LocationEntry {
+  name: string;
+  type: string;
+  is_virtual: boolean;
+}
+
+export interface HAConfig {
+  ha_url: string;
+  ha_token_set: boolean;
+  filabridge_public_url: string;
+}
+
+export interface HAValidationCheck {
+  entity_id: string;
+  found: boolean;
+  state?: string;
+  required: boolean;
+  hint?: string;
+}
+
+export interface HAValidation {
+  prefix: string;
+  package_file: string;
+  all_ok: boolean;
+  meter_missing: boolean;
+  checks: HAValidationCheck[];
+  fix_steps?: string[];
+}
