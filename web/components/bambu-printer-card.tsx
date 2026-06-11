@@ -4,6 +4,7 @@ import { Boxes, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "@/lib/api";
+import { findSpoolForBambuTray } from "@/lib/bambu-tray-spool";
 import type { BambuPrinter, BambuTray, Spool } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,9 +40,6 @@ export function BambuPrinterCard({
   spoolmanUrl,
   onChanged,
 }: BambuPrinterCardProps) {
-  const findSpool = (spoolId?: number | null) =>
-    spoolId ? spools.find((spool) => spool.id === spoolId) ?? null : null;
-
   const assign = async (tray: BambuTray, spoolId: number) => {
     try {
       await api.assignTray(tray.unique_id, spoolId);
@@ -59,7 +57,7 @@ export function BambuPrinterCard({
   };
 
   const renderTrayRow = (tray: BambuTray, amsName?: string) => {
-    const current = findSpool(tray.assigned_spool_id);
+    const current = findSpoolForBambuTray(tray, spools);
     return (
       <div
         key={tray.unique_id}

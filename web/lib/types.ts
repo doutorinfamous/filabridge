@@ -21,6 +21,7 @@ export interface Spool {
   remaining_weight: number;
   used_weight: number;
   filament?: SpoolFilament | null;
+  extra?: Record<string, unknown>;
 }
 
 export interface Filament {
