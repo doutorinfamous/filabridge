@@ -13,10 +13,11 @@ import {
   ScanSuccess,
   type ScanSuccessData,
 } from "@/components/nfc/scan-success";
+import { ScanSpoolPicker } from "@/components/nfc/scan-spool-picker";
 import { ScanWaitingCard } from "@/components/nfc/scan-waiting-card";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import type { NfcSessionStatus } from "@/lib/types";
+import type { NfcSelectSpoolSuccess, NfcSessionStatus } from "@/lib/types";
 
 function parseSuccessParams(params: URLSearchParams): ScanSuccessData | null {
   if (params.get("success") !== "1") return null;
@@ -46,9 +47,40 @@ function parseSuccessParams(params: URLSearchParams): ScanSuccessData | null {
 }
 
 function accentFromSession(session: NfcSessionStatus): string | undefined {
-  const hex = session.spool?.color_hex;
+  const hex = session.spool?.color_hex ?? session.pending_filament?.color_hex;
   if (!hex) return undefined;
   return hex.startsWith("#") ? hex : `#${hex}`;
+}
+
+function formatScanError(
+  errorCode: string,
+  searchParams: URLSearchParams
+): string {
+  if (errorCode === "no_spools_for_filament") {
+    const filamentName = searchParams.get("filament_name");
+    return filamentName
+      ? `Nenhum spool disponível para ${filamentName}.`
+      : "Nenhum spool disponível para este filamento.";
+  }
+  return errorCode;
+}
+
+function selectSuccessToScanData(
+  success: NfcSelectSpoolSuccess
+): ScanSuccessData {
+  return {
+    spoolId: success.spool_id,
+    spoolName: success.spool_name,
+    spoolMaterial: success.spool_material,
+    spoolBrand: success.spool_brand,
+    spoolColor: success.spool_color,
+    spoolWeight: success.spool_weight,
+    location: success.location,
+    locationType: success.location_type,
+    printer: success.printer,
+    toolhead: success.toolhead,
+    slot: success.slot,
+  };
 }
 
 function ScanEmptyState() {
@@ -85,8 +117,10 @@ function ScanErrorState({ message }: { message: string }) {
 }
 
 function ScanPairingView({ session }: { session: NfcSessionStatus }) {
-  const spoolFirst = session.has_spool && !session.has_location;
-  const locationFirst = session.has_location && !session.has_spool;
+  const spoolFirst =
+    session.has_spool && !session.has_location && !session.has_pending_filament;
+  const locationFirst =
+    session.has_location && !session.has_spool && !session.has_pending_filament;
 
   return (
     <div className="flex flex-1 flex-col px-5 py-8">
@@ -146,11 +180,18 @@ export default function NfcScanContent() {
   const searchParams = useSearchParams();
   const [session, setSession] = React.useState<NfcSessionStatus | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [selecting, setSelecting] = React.useState(false);
+  const [pickedSuccess, setPickedSuccess] =
+    React.useState<ScanSuccessData | null>(null);
 
-  const errorMessage = searchParams.get("error");
+  const sessionId = searchParams.get("session_id") ?? undefined;
+  const errorCode = searchParams.get("error");
+  const errorMessage = errorCode
+    ? formatScanError(errorCode, searchParams)
+    : null;
   const successData = React.useMemo(
-    () => parseSuccessParams(searchParams),
-    [searchParams]
+    () => pickedSuccess ?? parseSuccessParams(searchParams),
+    [pickedSuccess, searchParams]
   );
 
   React.useEffect(() => {
@@ -161,7 +202,7 @@ export default function NfcScanContent() {
 
     let cancelled = false;
     api
-      .getNfcSessionStatus()
+      .getNfcSessionStatus(sessionId)
       .then((status) => {
         if (!cancelled) setSession(status);
       })
@@ -175,7 +216,26 @@ export default function NfcScanContent() {
     return () => {
       cancelled = true;
     };
-  }, [errorMessage, successData]);
+  }, [errorMessage, successData, sessionId]);
+
+  const handleSelectSpool = React.useCallback(async (spoolId: number) => {
+    setSelecting(true);
+    try {
+      const result = await api.selectNfcSpool(spoolId, sessionId);
+      if (result.completed && result.success) {
+        setPickedSuccess(selectSuccessToScanData(result.success));
+        setSession({ active: false });
+        return;
+      }
+      if (result.session) {
+        setSession(result.session);
+      }
+    } catch {
+      setSession((current) => current);
+    } finally {
+      setSelecting(false);
+    }
+  }, [sessionId]);
 
   const accent =
     successData || errorMessage
@@ -212,6 +272,19 @@ export default function NfcScanContent() {
     return (
       <ScanLayout>
         <ScanEmptyState />
+      </ScanLayout>
+    );
+  }
+
+  if (session.has_pending_filament && session.pending_filament) {
+    return (
+      <ScanLayout accentColor={accent}>
+        <ScanSpoolPicker
+          filament={session.pending_filament}
+          location={session.location}
+          selecting={selecting}
+          onSelect={handleSelectSpool}
+        />
       </ScanLayout>
     );
   }

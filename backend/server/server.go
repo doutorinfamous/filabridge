@@ -58,6 +58,7 @@ func NewWebServer(bridge *core.FilamentBridge) *WebServer {
 
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	_ = router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
 	// Custom recovery middleware for API routes to ensure JSON responses
 	router.Use(func(c *gin.Context) {
@@ -125,6 +126,7 @@ func (ws *WebServer) setupRoutes() {
 		api.GET("/nfc/assign", ws.nfcAssignHandler)
 		api.GET("/nfc/urls", ws.nfcUrlsHandler)
 		api.GET("/nfc/session/status", ws.nfcSessionStatusHandler)
+		api.POST("/nfc/session/select-spool", ws.nfcSelectSpoolHandler)
 		api.GET("/dev/db/tables", ws.devDbTablesHandler)
 		api.GET("/dev/db/tables/:name", ws.devDbTableDataHandler)
 		api.GET("/locations", ws.getLocationsHandler)

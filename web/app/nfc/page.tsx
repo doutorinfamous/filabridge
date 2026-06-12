@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, ExternalLink, MapPin, Nfc, Search, Tag } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  MapPin,
+  Nfc,
+  Palette,
+  Search,
+  Tag,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "@/lib/api";
@@ -14,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type NfcTab = "spool" | "location";
+type NfcTab = "spool" | "filament" | "location";
 
 function bambuPrinterName(entry: NfcUrlEntry): string {
   if (entry.printer_name?.trim()) return entry.printer_name.trim();
@@ -31,6 +40,9 @@ function bambuSlotLabel(entry: NfcUrlEntry): string {
 }
 
 function entryTitle(entry: NfcUrlEntry): string {
+  if (entry.type === "filament") {
+    return `[${entry.filament_id}] ${entry.filament_name || "Filamento sem nome"}`;
+  }
   if (entry.type === "spool") {
     return `[${entry.spool_id}] ${entry.spool_name || "Spool sem nome"}`;
   }
@@ -41,6 +53,9 @@ function entryTitle(entry: NfcUrlEntry): string {
 }
 
 function entrySubtitle(entry: NfcUrlEntry): string {
+  if (entry.type === "filament") {
+    return `${entry.material || "?"} · ${entry.brand || "?"}`;
+  }
   if (entry.type === "spool") {
     const weight =
       entry.remaining_weight != null
@@ -58,7 +73,7 @@ function entrySubtitle(entry: NfcUrlEntry): string {
 }
 
 function entryKey(entry: NfcUrlEntry): string {
-  return `${entry.type}-${entry.spool_id ?? entry.display_name ?? entry.location_name ?? entry.url}`;
+  return `${entry.type}-${entry.spool_id ?? entry.filament_id ?? entry.display_name ?? entry.location_name ?? entry.url}`;
 }
 
 function ColorDot({ hex }: { hex?: string }) {
@@ -122,9 +137,10 @@ export default function NfcPage() {
   };
 
   const filamentUrl =
-    selected?.type === "spool" &&
+    selected &&
     selected.filament_id != null &&
-    spoolmanUrl
+    spoolmanUrl &&
+    (selected.type === "spool" || selected.type === "filament")
       ? `${spoolmanUrl}/filament/show/${selected.filament_id}`
       : null;
 
@@ -133,7 +149,8 @@ export default function NfcPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">NFC & QR</h1>
         <p className="text-sm text-muted-foreground">
-          Gere URLs e QR codes para programar tags NFC de spools e locais
+          Gere URLs e QR codes para programar tags NFC de spools, filamentos e
+          locais
         </p>
       </header>
 
@@ -141,6 +158,9 @@ export default function NfcPage() {
         <TabsList>
           <TabsTrigger value="spool">
             <Tag className="size-4" /> Spools
+          </TabsTrigger>
+          <TabsTrigger value="filament">
+            <Palette className="size-4" /> Filamentos
           </TabsTrigger>
           <TabsTrigger value="location">
             <MapPin className="size-4" /> Locais

@@ -156,7 +156,7 @@ export interface BambuPrinter {
 }
 
 export interface NfcUrlEntry {
-  type: "spool" | "location";
+  type: "spool" | "filament" | "location";
   url: string;
   qr_code_base64: string;
   // spool
@@ -185,6 +185,36 @@ export interface NfcSessionSpool {
   brand?: string;
   color_hex?: string;
   remaining_weight?: number;
+  location?: string;
+}
+
+export interface NfcSessionFilament {
+  id: number;
+  name?: string;
+  material?: string;
+  brand?: string;
+  color_hex?: string;
+  candidates: NfcSessionSpool[];
+}
+
+export interface NfcSelectSpoolSuccess {
+  spool_id: number;
+  spool_name?: string;
+  spool_material?: string;
+  spool_brand?: string;
+  spool_color?: string;
+  spool_weight?: number;
+  location: string;
+  location_type?: "storage" | "ams_slot" | "toolhead";
+  printer?: string;
+  toolhead?: string;
+  slot?: string;
+}
+
+export interface NfcSelectSpoolResponse {
+  completed: boolean;
+  success?: NfcSelectSpoolSuccess;
+  session?: NfcSessionStatus;
 }
 
 export interface NfcSessionLocation {
@@ -198,8 +228,10 @@ export interface NfcSessionLocation {
 export interface NfcSessionStatus {
   active: boolean;
   has_spool?: boolean;
+  has_pending_filament?: boolean;
   has_location?: boolean;
   spool?: NfcSessionSpool;
+  pending_filament?: NfcSessionFilament;
   location?: NfcSessionLocation;
   expires_at?: string;
 }

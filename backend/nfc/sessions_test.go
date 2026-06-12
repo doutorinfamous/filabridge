@@ -3,6 +3,7 @@ package nfc
 import (
 	"path/filepath"
 	"testing"
+	"time"
 
 	"filabridge/core"
 )
@@ -137,6 +138,146 @@ func TestCreateOrUpdateSessionMoonrakerToolheadStillWorks(t *testing.T) {
 	}
 	if session.PrinterName != "My Printer" || session.ToolheadID != 0 {
 		t.Fatalf("unexpected printer mapping: %q toolhead %d", session.PrinterName, session.ToolheadID)
+	}
+}
+
+func TestCreateOrUpdateSessionRecreatesAfterExpiry(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "expired-session"
+
+	first, err := CreateOrUpdateSession(bridge, sessionID, 3, "", 0, "", false)
+	if err != nil {
+		t.Fatalf("CreateOrUpdateSession failed: %v", err)
+	}
+
+	_, err = bridge.DB.Exec(
+		"UPDATE nfc_sessions SET expires_at = ? WHERE session_id = ?",
+		time.Now().Add(-time.Minute), sessionID,
+	)
+	if err != nil {
+		t.Fatalf("failed to expire session: %v", err)
+	}
+
+	second, err := CreateOrUpdateSession(bridge, sessionID, 7, "", 0, "", false)
+	if err != nil {
+		t.Fatalf("CreateOrUpdateSession after expiry failed: %v", err)
+	}
+	if second.SpoolID != 7 {
+		t.Fatalf("expected spool 7 after recreate, got %d", second.SpoolID)
+	}
+	if first.SessionID != second.SessionID {
+		t.Fatalf("expected same session id, got %q vs %q", first.SessionID, second.SessionID)
+	}
+}
+
+func TestSetPendingFilamentRecreatesAfterExpiry(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "expired-pending-session"
+
+	if _, err := CreateOrUpdateSession(bridge, sessionID, 0, "", 0, "Drybox", false); err != nil {
+		t.Fatalf("CreateOrUpdateSession failed: %v", err)
+	}
+
+	_, err := bridge.DB.Exec(
+		"UPDATE nfc_sessions SET expires_at = ? WHERE session_id = ?",
+		time.Now().Add(-time.Minute), sessionID,
+	)
+	if err != nil {
+		t.Fatalf("failed to expire session: %v", err)
+	}
+
+	session, err := SetPendingFilament(bridge, sessionID, 9)
+	if err != nil {
+		t.Fatalf("SetPendingFilament after expiry failed: %v", err)
+	}
+	if !session.HasPendingFilament || session.PendingFilamentID != 9 {
+		t.Fatalf("unexpected pending session: %+v", session)
+	}
+}
+
+func TestSetPendingFilamentAndSelectSpool(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "pending-session"
+
+	session, err := SetPendingFilament(bridge, sessionID, 5)
+	if err != nil {
+		t.Fatalf("SetPendingFilament failed: %v", err)
+	}
+	if !session.HasPendingFilament || session.HasSpool {
+		t.Fatalf("expected pending filament without spool, got %+v", session)
+	}
+
+	selected, err := SelectSpool(bridge, sessionID, 18)
+	if err != nil {
+		t.Fatalf("SelectSpool failed: %v", err)
+	}
+	if !selected.HasSpool || selected.HasPendingFilament || selected.SpoolID != 18 {
+		t.Fatalf("unexpected selected session: %+v", selected)
+	}
+}
+
+func TestGetSessionAfterSetPendingFilament(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "pending-status-session"
+
+	if _, err := SetPendingFilament(bridge, sessionID, 2); err != nil {
+		t.Fatalf("SetPendingFilament failed: %v", err)
+	}
+
+	session, err := GetSession(bridge, sessionID)
+	if err != nil {
+		t.Fatalf("GetSession after SetPendingFilament failed: %v", err)
+	}
+	if !session.HasPendingFilament || session.PendingFilamentID != 2 {
+		t.Fatalf("expected pending filament 2, got %+v", session)
+	}
+	if session.HasSpool || session.HasLocation {
+		t.Fatalf("expected no spool/location yet, got %+v", session)
+	}
+}
+
+func TestSetPendingFilamentThenLocationPreservesPending(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "pending-then-location"
+
+	if _, err := SetPendingFilament(bridge, sessionID, 4); err != nil {
+		t.Fatalf("SetPendingFilament failed: %v", err)
+	}
+
+	session, err := CreateOrUpdateSession(bridge, sessionID, 0, "", 0, "Drybox", false)
+	if err != nil {
+		t.Fatalf("CreateOrUpdateSession location failed: %v", err)
+	}
+	if !session.HasPendingFilament || session.PendingFilamentID != 4 {
+		t.Fatalf("expected pending filament preserved, got %+v", session)
+	}
+	if !session.HasLocation || session.LocationName != "Drybox" {
+		t.Fatalf("expected location Drybox, got %+v", session)
+	}
+}
+
+func TestGetSessionToleratesLegacyNullSpoolID(t *testing.T) {
+	bridge := newSessionTestBridge(t)
+	const sessionID = "legacy-null-session"
+
+	now := time.Now()
+	_, err := bridge.DB.Exec(
+		"INSERT INTO nfc_sessions (session_id, spool_id, pending_filament_id, printer_name, toolhead_id, location_name, is_printer_location, created_at, expires_at) VALUES (?, NULL, ?, '', 0, '', 0, ?, ?)",
+		sessionID, 6, now, now.Add(5*time.Minute),
+	)
+	if err != nil {
+		t.Fatalf("failed to insert legacy session row: %v", err)
+	}
+
+	session, err := GetSession(bridge, sessionID)
+	if err != nil {
+		t.Fatalf("GetSession with NULL spool_id failed: %v", err)
+	}
+	if session.HasSpool || session.SpoolID != 0 {
+		t.Fatalf("expected no spool for NULL spool_id, got %+v", session)
+	}
+	if !session.HasPendingFilament || session.PendingFilamentID != 6 {
+		t.Fatalf("expected pending filament 6, got %+v", session)
 	}
 }
 

@@ -9,7 +9,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -190,11 +192,14 @@ func (c *Client) GetAllSpools() ([]Spool, error) {
 		return nil, fmt.Errorf("error decoding spools from Spoolman: %w", err)
 	}
 
+	return c.filterAndSortSpools(spools), nil
+}
+
+func (c *Client) filterAndSortSpools(spools []Spool) []Spool {
 	for i := range spools {
 		spools[i] = c.normalizeSpoolData(spools[i])
 	}
 
-	// Filter out spools with 0g remaining weight
 	filteredSpools := make([]Spool, 0, len(spools))
 	for _, spool := range spools {
 		if spool.RemainingWeight > 0 {
@@ -203,7 +208,6 @@ func (c *Client) GetAllSpools() ([]Spool, error) {
 	}
 	spools = filteredSpools
 
-	// Sort spools: first alphabetically by display name, then by remaining weight (ascending)
 	sort.Slice(spools, func(i, j int) bool {
 		nameI := spools[i].getSpoolDisplayName()
 		nameJ := spools[j].getSpoolDisplayName()
@@ -215,7 +219,62 @@ func (c *Client) GetAllSpools() ([]Spool, error) {
 		return spools[i].RemainingWeight < spools[j].RemainingWeight
 	})
 
-	return spools, nil
+	return spools
+}
+
+// GetSpoolsByFilament returns non-empty spools for a specific filament type.
+func (c *Client) GetSpoolsByFilament(filamentID int) ([]Spool, error) {
+	query := url.Values{}
+	query.Set("filament.id", strconv.Itoa(filamentID))
+
+	req, err := http.NewRequest("GET", c.baseURL+"/api/v1/spool?"+query.Encode(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	c.addAuthHeader(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error getting spools for filament %d from Spoolman: %w", filamentID, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleAPIError(resp)
+	}
+
+	var spools []Spool
+	if err := json.NewDecoder(resp.Body).Decode(&spools); err != nil {
+		return nil, fmt.Errorf("error decoding spools for filament %d from Spoolman: %w", filamentID, err)
+	}
+
+	return c.filterAndSortSpools(spools), nil
+}
+
+// GetFilament returns a single filament type by ID from Spoolman.
+func (c *Client) GetFilament(filamentID int) (*Filament, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/filament/%d", c.baseURL, filamentID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	c.addAuthHeader(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error getting filament %d from Spoolman: %w", filamentID, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("filament %d not found in Spoolman: %w", filamentID, c.handleAPIError(resp))
+	}
+
+	var filament Filament
+	if err := json.NewDecoder(resp.Body).Decode(&filament); err != nil {
+		return nil, fmt.Errorf("error decoding filament %d from Spoolman: %w", filamentID, err)
+	}
+
+	return &filament, nil
 }
 
 // GetAllFilaments gets all filament types from Spoolman.

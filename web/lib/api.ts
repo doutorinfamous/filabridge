@@ -11,6 +11,7 @@ import type {
   DevDbTable,
   DevDbTableData,
   NfcUrlEntry,
+  NfcSelectSpoolResponse,
   NfcSessionStatus,
   PrintError,
   PrintHistoryResponse,
@@ -208,8 +209,20 @@ export const api = {
     request<{ urls: NfcUrlEntry[] | null; spoolman_url: string }>(
       "/api/nfc/urls"
     ),
-  getNfcSessionStatus: () =>
-    request<NfcSessionStatus>("/api/nfc/session/status"),
+  getNfcSessionStatus: (sessionId?: string) => {
+    const q = sessionId
+      ? `?session_id=${encodeURIComponent(sessionId)}`
+      : "";
+    return request<NfcSessionStatus>(`/api/nfc/session/status${q}`);
+  },
+  selectNfcSpool: (spoolId: number, sessionId?: string) =>
+    request<NfcSelectSpoolResponse>("/api/nfc/session/select-spool", {
+      method: "POST",
+      body: JSON.stringify({
+        spool_id: spoolId,
+        ...(sessionId ? { session_id: sessionId } : {}),
+      }),
+    }),
 
   // Dev DB (temporary debug)
   getDevDbTables: () =>

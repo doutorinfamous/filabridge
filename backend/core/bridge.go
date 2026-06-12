@@ -125,6 +125,7 @@ func (b *FilamentBridge) initDatabase() error {
 		`CREATE TABLE IF NOT EXISTS nfc_sessions (
 			session_id TEXT PRIMARY KEY,
 			spool_id INTEGER,
+			pending_filament_id INTEGER,
 			printer_name TEXT,
 			toolhead_id INTEGER,
 			location_name TEXT,
@@ -163,6 +164,10 @@ func (b *FilamentBridge) initDatabase() error {
 		return fmt.Errorf("failed to migrate database schema to printer_slots: %w", err)
 	}
 
+	if err := b.migrateNFCSessionsSchema(); err != nil {
+		return fmt.Errorf("failed to migrate NFC sessions schema: %w", err)
+	}
+
 	// Migrate existing FilaBridge locations to Spoolman
 	if err := b.migrateLocationsToSpoolman(); err != nil {
 		log.Printf("Warning: Failed to migrate locations to Spoolman: %v", err)
@@ -173,6 +178,14 @@ func (b *FilamentBridge) initDatabase() error {
 		log.Printf("Warning: Failed to migrate toolhead mappings to Spoolman: %v", err)
 	}
 
+	return nil
+}
+
+func (b *FilamentBridge) migrateNFCSessionsSchema() error {
+	_, err := b.DB.Exec("ALTER TABLE nfc_sessions ADD COLUMN pending_filament_id INTEGER")
+	if err != nil && !strings.Contains(err.Error(), "duplicate column") {
+		return fmt.Errorf("failed to add pending_filament_id column: %w", err)
+	}
 	return nil
 }
 
