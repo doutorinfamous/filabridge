@@ -4,10 +4,10 @@ export default function DevDatabasePage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Banco de Dados</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Database</h1>
         <p className="text-sm text-muted-foreground">
-          Inspeção read-only do SQLite local (filabridge.db), com estrutura e
-          dados atualizados em tempo real
+          Read-only inspection of the local SQLite database (filabridge.db),
+          with schema and data updated in real time
         </p>
       </header>
       <DatabaseBrowser />

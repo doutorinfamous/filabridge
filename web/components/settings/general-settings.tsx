@@ -58,7 +58,7 @@ export function SpoolmanSettings() {
           poll_interval: cfg.poll_interval ?? "30",
         });
       })
-      .catch(() => toast.error("Falha ao carregar configuração"))
+      .catch(() => toast.error("Failed to load configuration"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -66,9 +66,9 @@ export function SpoolmanSettings() {
     setSaving(true);
     try {
       await api.updateConfig(form);
-      toast.success("Configuração salva");
+      toast.success("Configuration saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -78,10 +78,10 @@ export function SpoolmanSettings() {
     setTesting(true);
     try {
       await api.testSpoolman();
-      toast.success("Conexão com o Spoolman OK");
+      toast.success("Spoolman connection OK");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha na conexão"
+        error instanceof Error ? error.message : "Connection failed"
       );
     } finally {
       setTesting(false);
@@ -93,14 +93,14 @@ export function SpoolmanSettings() {
       <CardHeader>
         <CardTitle className="text-base">Spoolman</CardTitle>
         <CardDescription>
-          Inventário de filamento usado para debitar o consumo das impressões
+          Filament inventory used to debit print consumption
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Field
           id="spoolman_url"
-          label="URL do Spoolman"
-          hint="Ex.: http://192.168.1.10:8000 (use host.docker.internal dentro do Docker)"
+          label="Spoolman URL"
+          hint="e.g. http://192.168.1.10:8000 (use host.docker.internal inside Docker)"
         >
           <Input
             id="spoolman_url"
@@ -113,7 +113,7 @@ export function SpoolmanSettings() {
           />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="spoolman_username" label="Usuário (opcional)">
+          <Field id="spoolman_username" label="Username (optional)">
             <Input
               id="spoolman_username"
               value={form.spoolman_username}
@@ -124,7 +124,7 @@ export function SpoolmanSettings() {
               placeholder="Basic auth"
             />
           </Field>
-          <Field id="spoolman_password" label="Senha (opcional)">
+          <Field id="spoolman_password" label="Password (optional)">
             <Input
               id="spoolman_password"
               type="password"
@@ -139,8 +139,8 @@ export function SpoolmanSettings() {
         </div>
         <Field
           id="poll_interval"
-          label="Intervalo de polling (segundos)"
-          hint="Frequência de verificação do status das impressoras Moonraker"
+          label="Polling interval (seconds)"
+          hint="How often Moonraker printer status is checked"
         >
           <Input
             id="poll_interval"
@@ -162,7 +162,7 @@ export function SpoolmanSettings() {
             ) : (
               <Save className="size-4" />
             )}
-            Salvar
+            Save
           </Button>
           <Button variant="outline" onClick={test} disabled={testing}>
             {testing ? (
@@ -170,7 +170,7 @@ export function SpoolmanSettings() {
             ) : (
               <PlugZap className="size-4" />
             )}
-            Testar conexão
+            Test connection
           </Button>
         </div>
       </CardContent>
@@ -206,7 +206,7 @@ export function HomeAssistantSettings() {
 
   const save = async () => {
     if (!form.ha_url.trim()) {
-      toast.error("Informe a URL do Home Assistant");
+      toast.error("Enter the Home Assistant URL");
       return;
     }
     setSaving(true);
@@ -216,11 +216,11 @@ export function HomeAssistantSettings() {
         filabridge_public_url: form.filabridge_public_url.trim(),
         ...(form.ha_token.trim() ? { ha_token: form.ha_token.trim() } : {}),
       });
-      toast.success("Configuração do Home Assistant salva");
+      toast.success("Home Assistant configuration saved");
       if (form.ha_token.trim()) setTokenSet(true);
       setForm((f) => ({ ...f, ha_token: "" }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -230,10 +230,10 @@ export function HomeAssistantSettings() {
     setTesting(true);
     try {
       await api.testHA(form.ha_url.trim(), form.ha_token.trim());
-      toast.success("Conexão com o Home Assistant OK");
+      toast.success("Home Assistant connection OK");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha na conexão com o HA"
+        error instanceof Error ? error.message : "HA connection failed"
       );
     } finally {
       setTesting(false);
@@ -247,12 +247,12 @@ export function HomeAssistantSettings() {
           <Home className="size-4" /> Home Assistant (Bambu Lab)
         </CardTitle>
         <CardDescription>
-          Conecte ao Home Assistant com a integração ha-bambulab para
-          rastreamento automático de filamento
+          Connect to Home Assistant with the ha-bambulab integration for
+          automatic filament tracking
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Field id="ha_url" label="URL do Home Assistant">
+        <Field id="ha_url" label="Home Assistant URL">
           <Input
             id="ha_url"
             value={form.ha_url}
@@ -263,8 +263,8 @@ export function HomeAssistantSettings() {
         </Field>
         <Field
           id="ha_token"
-          label={`Token de acesso ${tokenSet ? "(já configurado)" : "(não definido)"}`}
-          hint="Long-Lived Access Token — deixe em branco para manter o atual"
+          label={`Access token ${tokenSet ? "(configured)" : "(not set)"}`}
+          hint="Long-Lived Access Token — leave blank to keep the current token"
         >
           <Input
             id="ha_token"
@@ -279,8 +279,8 @@ export function HomeAssistantSettings() {
         </Field>
         <Field
           id="filabridge_public_url"
-          label="URL pública do FilaBridge (webhooks e tags NFC/QR)"
-          hint="Usada nos webhooks do HA e como base das URLs de tags NFC/QR — precisa ser acessível pela rede (não use localhost nem 0.0.0.0)"
+          label="FilaBridge public URL (webhooks and NFC/QR tags)"
+          hint="Used in HA webhooks and as the base for NFC/QR tag URLs — must be reachable on your network (do not use localhost or 0.0.0.0)"
         >
           <Input
             id="filabridge_public_url"
@@ -299,7 +299,7 @@ export function HomeAssistantSettings() {
             ) : (
               <Save className="size-4" />
             )}
-            Salvar
+            Save
           </Button>
           <Button variant="outline" onClick={test} disabled={testing}>
             {testing ? (
@@ -307,12 +307,12 @@ export function HomeAssistantSettings() {
             ) : (
               <PlugZap className="size-4" />
             )}
-            Testar conexão
+            Test connection
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Guia completo: <code>docs/home-assistant-setup.md</code> no
-          repositório do FilaBridge.
+          Full guide: <code>docs/home-assistant-setup.md</code> in the
+          FilaBridge repository.
         </p>
       </CardContent>
     </Card>

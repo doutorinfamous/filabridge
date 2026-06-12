@@ -22,19 +22,17 @@ function SettingsContent() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Configurações
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Spoolman, Home Assistant, impressoras e comportamento do FilaBridge
+          Spoolman, Home Assistant, printers, and FilaBridge behavior
         </p>
       </header>
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="general">Geral</TabsTrigger>
-          <TabsTrigger value="printers">Impressoras</TabsTrigger>
-          <TabsTrigger value="advanced">Avançado</TabsTrigger>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="printers">Printers</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">

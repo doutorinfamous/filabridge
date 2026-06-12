@@ -42,7 +42,7 @@ import {
 import { SpoolDot, SpoolWeightBadge } from "@/components/spool-select";
 
 function formatGrams(grams: number): string {
-  return `${grams.toLocaleString("pt-BR", {
+  return `${grams.toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}g`;
@@ -92,11 +92,11 @@ function PrintErrorActions({
         action: "assign_spool",
         spool_id: spoolId,
       });
-      toast.success("Consumo atribuído ao spool");
+      toast.success("Usage assigned to spool");
       onChanged();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao atribuir spool"
+        error instanceof Error ? error.message : "Failed to assign spool"
       );
     } finally {
       setSaving(false);
@@ -108,11 +108,11 @@ function PrintErrorActions({
     setSaving(true);
     try {
       await api.resolvePrintError(err.id, { action: "dismiss" });
-      toast.success("Impressão marcada como concluída");
+      toast.success("Print marked as completed");
       onChanged();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao concluir impressão"
+        error instanceof Error ? error.message : "Failed to complete print"
       );
     } finally {
       setSaving(false);
@@ -135,15 +135,15 @@ function PrintErrorActions({
               ) : (
                 <ChevronsUpDown className="size-4" />
               )}
-              Atribuir a spool
+              Assign spool
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Buscar spool..." />
+              <CommandInput placeholder="Search spools..." />
               <CommandList>
                 <CommandEmpty>
-                  {loadingSpools ? "Carregando..." : "Nenhum spool encontrado"}
+                  {loadingSpools ? "Loading..." : "No spools found"}
                 </CommandEmpty>
                 <CommandGroup>
                   {spools.map((spool) => (
@@ -172,22 +172,22 @@ function PrintErrorActions({
         disabled={saving}
         onClick={() => setDismissOpen(true)}
       >
-        Concluir sem registrar
+        Complete without logging
       </Button>
 
       <Dialog open={dismissOpen} onOpenChange={setDismissOpen}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Concluir sem registrar uso?</DialogTitle>
+            <DialogTitle>Complete without logging usage?</DialogTitle>
             <DialogDescription>
-              O consumo de filamento desta impressão não será debitado no
-              Spoolman nem registrado no histórico. Todos os erros pendentes
-              deste arquivo serão encerrados.
+              Filament consumption for this print will not be debited in
+              Spoolman or recorded in history. All pending errors for this file
+              will be dismissed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDismissOpen(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button onClick={dismiss} disabled={saving}>
               {saving ? (
@@ -195,7 +195,7 @@ function PrintErrorActions({
               ) : (
                 <Check className="size-4" />
               )}
-              Confirmar
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -223,14 +223,14 @@ export function PrintErrors({
         >
           <AlertTriangle className="size-4" />
           <AlertTitle>
-            Falha ao processar impressão — {err.printer_name}
+            Failed to process print — {err.printer_name}
           </AlertTitle>
           <AlertDescription className="space-y-2 break-words">
             <p className="break-words">
-              <span className="font-medium">Arquivo:</span> {err.filename}
+              <span className="font-medium">File:</span> {err.filename}
               <span className="px-2 text-muted-foreground">·</span>
-              <span className="font-medium">Quando:</span>{" "}
-              {new Date(err.timestamp).toLocaleString("pt-BR")}
+              <span className="font-medium">When:</span>{" "}
+              {new Date(err.timestamp).toLocaleString("en-US")}
             </p>
             {(err.grams ?? 0) > 0 && err.toolhead_id != null && (
               <div className="flex flex-wrap items-center gap-2">
@@ -244,8 +244,8 @@ export function PrintErrors({
             )}
             <p className="break-words">{err.error}</p>
             <p className="text-xs text-muted-foreground">
-              Escolha um spool para debitar o consumo ou conclua sem registrar
-              no Spoolman.
+              Choose a spool to debit consumption or complete without logging
+              to Spoolman.
             </p>
             <PrintErrorActions err={err} onChanged={onChanged} />
           </AlertDescription>

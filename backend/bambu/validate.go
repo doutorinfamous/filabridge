@@ -31,22 +31,22 @@ func haEntityChecks(prefix string) []HAEntityCheck {
 		{
 			EntityID: fmt.Sprintf("sensor.filabridge_%s_filament_usage", p),
 			Required: true,
-			Hint:     "Template sensor: gramas usadas durante o print",
+			Hint:     "Template sensor: grams used during the print",
 		},
 		{
 			EntityID: fmt.Sprintf("sensor.filabridge_%s_filament_usage_meter", p),
 			Required: true,
-			Hint:     "Utility meter: necessário para utility_meter.calibrate e débito no Spoolman",
+			Hint:     "Utility meter: required for utility_meter.calibrate and Spoolman debit",
 		},
 		{
 			EntityID: fmt.Sprintf("input_number.filabridge_%s_last_tray", p),
 			Required: true,
-			Hint:     "Helper: última bandeja ativa ao iniciar impressão",
+			Hint:     "Helper: last active tray when print starts",
 		},
 		{
 			EntityID: fmt.Sprintf("sensor.filabridge_%s_active_tray", p),
 			Required: true,
-			Hint:     "Template sensor: bandeja AMS ativa",
+			Hint:     "Template sensor: active AMS tray",
 		},
 	}
 }
@@ -84,14 +84,14 @@ func ValidateHAEntities(prefix string, states []homeassistant.State) HAValidatio
 	}
 	if !allOK {
 		result.FixSteps = []string{
-			"No FilaBridge, clique HA Config e baixe o YAML completo (deve conter utility_meter:, template:, automation:).",
-			"Substitua config/packages/" + result.PackageFile + " no Home Assistant (nome em minúsculas).",
-			"Reinicie o Home Assistant por completo (não só recarregar automações).",
-			"Confirme as 4 entidades em Ferramentas de desenvolvedor → Estados.",
+			"In FilaBridge, click HA Config and download the full YAML (must contain utility_meter:, template:, automation:).",
+			"Replace config/packages/" + result.PackageFile + " in Home Assistant (lowercase filename).",
+			"Fully restart Home Assistant (do not only reload automations).",
+			"Confirm all 4 entities in Developer Tools → States.",
 		}
 		if meterMissing {
 			result.FixSteps = append([]string{
-				"utility_meter.calibrate fica desconhecida quando sensor.filabridge_*_filament_usage_meter não existe — não remova essa ação da automação.",
+				"utility_meter.calibrate is unknown when sensor.filabridge_*_filament_usage_meter is missing — do not remove that action from the automation.",
 			}, result.FixSteps...)
 		}
 	}

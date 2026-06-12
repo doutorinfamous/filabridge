@@ -31,7 +31,7 @@ function formatCell(value: unknown): string {
 }
 
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString("pt-BR", {
+  return date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -45,14 +45,14 @@ function SchemaTable({ data }: { data: DevDbTableData }) {
   return (
     <div className="mb-4 space-y-2">
       <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Estrutura
+        Schema
       </h4>
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-max min-w-full border-collapse text-xs">
           <thead>
             <tr className="border-b border-border bg-muted/40">
               <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground">
-                Coluna
+                Column
               </th>
               <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground">
                 Tipo
@@ -90,7 +90,7 @@ function SchemaTable({ data }: { data: DevDbTableData }) {
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2">
-                  {col.not_null ? "sim" : "—"}
+                  {col.not_null ? "yes" : "—"}
                 </td>
                 <td
                   className="max-w-[240px] truncate whitespace-nowrap px-3 py-2 font-mono text-muted-foreground"
@@ -126,7 +126,7 @@ export function DatabaseBrowser() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Falha ao carregar tabelas"
+          error instanceof Error ? error.message : "Failed to load tables"
         );
       });
   }, []);
@@ -142,19 +142,19 @@ export function DatabaseBrowser() {
       .catch((error) => {
         setTableData(null);
         toast.error(
-          error instanceof Error ? error.message : "Falha ao carregar dados"
+          error instanceof Error ? error.message : "Failed to load data"
         );
       });
   }, []);
 
-  // Polling em tempo real: lista de tabelas
+  // Real-time polling: table list
   React.useEffect(() => {
     refreshTables();
     const id = window.setInterval(() => refreshTables(), REFRESH_MS);
     return () => window.clearInterval(id);
   }, [refreshTables]);
 
-  // Polling em tempo real: dados da tabela selecionada
+  // Real-time polling: selected table data
   React.useEffect(() => {
     if (!selectedTable) return;
     loadTableData(selectedTable, offset);
@@ -197,16 +197,16 @@ export function DatabaseBrowser() {
     <div className="space-y-4">
       <Alert className="border-amber-500/30 bg-amber-500/10">
         <AlertDescription className="text-amber-200/90">
-          Ferramenta temporária de debug — somente leitura. Atualiza
-          automaticamente a cada {REFRESH_MS / 1000}s.
+          Temporary debug tool — read-only. Refreshes automatically every{" "}
+          {REFRESH_MS / 1000}s.
         </AlertDescription>
       </Alert>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           {lastUpdated
-            ? `Última atualização: ${formatTime(lastUpdated)}`
-            : "Carregando…"}
+            ? `Last updated: ${formatTime(lastUpdated)}`
+            : "Loading…"}
         </p>
         <Button
           type="button"
@@ -221,7 +221,7 @@ export function DatabaseBrowser() {
               (refreshing || paginating) && "animate-spin"
             )}
           />
-          Atualizar agora
+          Refresh now
         </Button>
       </div>
 
@@ -233,7 +233,7 @@ export function DatabaseBrowser() {
               <Input
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
-                placeholder="Filtrar tabelas..."
+                placeholder="Filter tables..."
                 className="pl-9"
               />
             </div>
@@ -246,7 +246,7 @@ export function DatabaseBrowser() {
                 </div>
               ) : filteredTables.length === 0 ? (
                 <p className="px-2 py-8 text-center text-sm text-muted-foreground">
-                  Nenhuma tabela encontrada.
+                  No tables found.
                 </p>
               ) : (
                 <div className="space-y-1">
@@ -284,9 +284,9 @@ export function DatabaseBrowser() {
             {!selectedTable ? (
               <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground">
                 <Database className="mb-3 size-10 opacity-40" />
-                <p className="text-sm font-medium">Selecione uma tabela</p>
+                <p className="text-sm font-medium">Select a table</p>
                 <p className="text-xs">
-                  Escolha uma tabela à esquerda para ver estrutura e dados
+                  Choose a table on the left to view schema and data
                 </p>
               </div>
             ) : (
@@ -297,7 +297,7 @@ export function DatabaseBrowser() {
                       {selectedTable}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      {total} linha{total === 1 ? "" : "s"} · somente leitura
+                      {total} row{total === 1 ? "" : "s"} · read-only
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -314,7 +314,7 @@ export function DatabaseBrowser() {
                       }}
                     >
                       <ChevronLeft className="size-4" />
-                      Anterior
+                      Previous
                     </Button>
                     <span className="text-xs text-muted-foreground">
                       {total === 0
@@ -333,7 +333,7 @@ export function DatabaseBrowser() {
                         );
                       }}
                     >
-                      Próximo
+                      Next
                       <ChevronRight className="size-4" />
                     </Button>
                   </div>
@@ -351,7 +351,7 @@ export function DatabaseBrowser() {
 
                     <div className="flex min-h-0 flex-1 flex-col space-y-2">
                       <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Dados
+                        Data
                       </h4>
                       {tableData.columns.length > 0 ? (
                         <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border">
@@ -376,7 +376,7 @@ export function DatabaseBrowser() {
                                       colSpan={tableData.columns.length}
                                       className="px-3 py-8 text-center text-muted-foreground"
                                     >
-                                      Tabela vazia.
+                                      Empty table.
                                     </td>
                                   </tr>
                                 ) : (
@@ -403,14 +403,14 @@ export function DatabaseBrowser() {
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          Nenhuma coluna encontrada.
+                          No columns found.
                         </p>
                       )}
                     </div>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Falha ao carregar a tabela.
+                    Failed to load table.
                   </p>
                 )}
               </>

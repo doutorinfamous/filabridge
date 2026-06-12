@@ -45,13 +45,13 @@ export function BambuPrinterCard({
       await api.assignTray(tray.unique_id, spoolId);
       toast.success(
         spoolId > 0
-          ? `Spool ${spoolId} atribuído a ${trayLabel(tray)}`
-          : "Bandeja esvaziada"
+          ? `Spool ${spoolId} assigned to ${trayLabel(tray)}`
+          : "Tray cleared"
       );
       onChanged();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao atribuir spool"
+        error instanceof Error ? error.message : "Failed to assign spool"
       );
     }
   };
@@ -89,7 +89,7 @@ export function BambuPrinterCard({
               href={`${spoolmanUrl}/spool/show/${current.id}`}
               target="_blank"
               rel="noreferrer"
-              title="Abrir no Spoolman"
+              title="Open in Spoolman"
             >
               <ExternalLink className="size-4" />
             </a>
@@ -152,7 +152,7 @@ export function BambuPrinterCard({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Nenhuma bandeja descoberta ainda.
+            No trays discovered yet.
           </p>
         )}
       </CardContent>

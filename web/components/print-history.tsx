@@ -35,22 +35,22 @@ const statusConfig: Record<
   { label: string; icon: React.ElementType; className: string }
 > = {
   printing: {
-    label: "Imprimindo",
+    label: "Printing",
     icon: Loader2,
     className: "border-blue-500/40 bg-blue-500/10 text-blue-400",
   },
   completed: {
-    label: "Concluída",
+    label: "Completed",
     icon: CheckCircle2,
     className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
   },
   cancelled: {
-    label: "Cancelada",
+    label: "Cancelled",
     icon: CircleDashed,
     className: "border-amber-500/40 bg-amber-500/10 text-amber-400",
   },
   failed: {
-    label: "Falhou",
+    label: "Failed",
     icon: XCircle,
     className: "border-red-500/40 bg-red-500/10 text-red-400",
   },
@@ -60,7 +60,7 @@ function formatDate(value?: string | null): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("pt-BR", {
+  return date.toLocaleString("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -70,7 +70,7 @@ function formatDate(value?: string | null): string {
 }
 
 function formatGrams(grams: number): string {
-  return `${grams.toLocaleString("pt-BR", {
+  return `${grams.toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}g`;
@@ -102,7 +102,7 @@ function JobCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate font-medium" title={job.job_name}>
-              {job.job_name || "(sem nome de arquivo)"}
+              {job.job_name || "(no file name)"}
             </p>
             <p className="text-xs text-muted-foreground">
               {job.printer_name} · {formatDate(job.finished_at ?? job.started_at)}
@@ -200,7 +200,7 @@ export function PrintHistory() {
           toast.error(
             error instanceof Error
               ? error.message
-              : "Falha ao carregar histórico"
+              : "Failed to load history"
           );
         })
         .finally(() => setLoading(false));
@@ -226,10 +226,10 @@ export function PrintHistory() {
           }}
         >
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Todas as impressoras" />
+            <SelectValue placeholder="All printers" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_PRINTERS}>Todas as impressoras</SelectItem>
+            <SelectItem value={ALL_PRINTERS}>All printers</SelectItem>
             {printers.map((printer) => (
               <SelectItem key={printer.id} value={printer.id}>
                 {printer.name}
@@ -250,12 +250,12 @@ export function PrintHistory() {
             }}
           >
             <ChevronLeft className="size-4" />
-            Anterior
+            Previous
           </Button>
           <span className="text-xs text-muted-foreground">
             {total === 0
               ? "0"
-              : `${offset + 1}–${Math.min(offset + PAGE_SIZE, total)} de ${total}`}
+              : `${offset + 1}–${Math.min(offset + PAGE_SIZE, total)} of ${total}`}
           </span>
           <Button
             type="button"
@@ -267,7 +267,7 @@ export function PrintHistory() {
               loadJobs(offset + PAGE_SIZE, printerFilter);
             }}
           >
-            Próximo
+            Next
             <ChevronRight className="size-4" />
           </Button>
         </div>
@@ -283,9 +283,9 @@ export function PrintHistory() {
         <Card className="border-border/70 bg-card/60">
           <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <History className="mb-3 size-10 opacity-40" />
-            <p className="text-sm font-medium">Nenhuma impressão registrada</p>
+            <p className="text-sm font-medium">No prints recorded</p>
             <p className="text-xs">
-              O histórico aparece aqui quando as impressões forem concluídas
+              History appears here when prints are completed
             </p>
           </CardContent>
         </Card>

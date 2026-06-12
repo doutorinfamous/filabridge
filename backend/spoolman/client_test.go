@@ -8,10 +8,10 @@ import (
 )
 
 func TestMergeLocations(t *testing.T) {
-	configured := []string{"Drybox", "Prateleira A"}
+	configured := []string{"Drybox", "Shelf A"}
 	spoolDerived := []Location{
-		{Name: "Prateleira A"},
-		{Name: "Impressora"},
+		{Name: "Shelf A"},
+		{Name: "Printer"},
 	}
 
 	merged := mergeLocations(configured, spoolDerived)
@@ -20,7 +20,7 @@ func TestMergeLocations(t *testing.T) {
 		t.Fatalf("expected 3 locations, got %d", len(merged))
 	}
 
-	expectedOrder := []string{"Drybox", "Prateleira A", "Impressora"}
+	expectedOrder := []string{"Drybox", "Shelf A", "Printer"}
 	for i, name := range expectedOrder {
 		if merged[i].Name != name {
 			t.Fatalf("expected location %q at index %d, got %q", name, i, merged[i].Name)
@@ -50,12 +50,12 @@ func TestGetLocationsMergesSettingAndSpoolLocations(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/v1/setting/locations":
 			json.NewEncoder(w).Encode(SettingResponse{
-				Value: `["Drybox","Prateleira B"]`,
+				Value: `["Drybox","Shelf B"]`,
 				IsSet: true,
 				Type:  "array",
 			})
 		case "/api/v1/location":
-			json.NewEncoder(w).Encode([]string{"Prateleira A", "Prateleira B"})
+			json.NewEncoder(w).Encode([]string{"Shelf A", "Shelf B"})
 		default:
 			http.NotFound(w, r)
 		}
@@ -72,7 +72,7 @@ func TestGetLocationsMergesSettingAndSpoolLocations(t *testing.T) {
 		t.Fatalf("expected 3 locations, got %d", len(locations))
 	}
 
-	expected := []string{"Drybox", "Prateleira B", "Prateleira A"}
+	expected := []string{"Drybox", "Shelf B", "Shelf A"}
 	for i, name := range expected {
 		if locations[i].Name != name {
 			t.Fatalf("expected location %q at index %d, got %q", name, i, locations[i].Name)
@@ -86,7 +86,7 @@ func TestGetLocationsFallsBackWhenSettingUnavailable(t *testing.T) {
 		case "/api/v1/setting/locations":
 			http.NotFound(w, r)
 		case "/api/v1/location":
-			json.NewEncoder(w).Encode([]string{"Prateleira A"})
+			json.NewEncoder(w).Encode([]string{"Shelf A"})
 		default:
 			http.NotFound(w, r)
 		}
@@ -99,7 +99,7 @@ func TestGetLocationsFallsBackWhenSettingUnavailable(t *testing.T) {
 		t.Fatalf("GetLocations failed: %v", err)
 	}
 
-	if len(locations) != 1 || locations[0].Name != "Prateleira A" {
+	if len(locations) != 1 || locations[0].Name != "Shelf A" {
 		t.Fatalf("expected spool-derived location only, got %+v", locations)
 	}
 }

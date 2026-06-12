@@ -59,8 +59,8 @@ function formatScanError(
   if (errorCode === "no_spools_for_filament") {
     const filamentName = searchParams.get("filament_name");
     return filamentName
-      ? `Nenhum spool disponível para ${filamentName}.`
-      : "Nenhum spool disponível para este filamento.";
+      ? `No spools available for ${filamentName}.`
+      : "No spools available for this filament.";
   }
   return errorCode;
 }

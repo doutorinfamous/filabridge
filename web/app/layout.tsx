@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FilaBridge",
   description:
-    "FilaBridge — o elo entre suas impressoras 3D e o inventário de filamento",
+    "FilaBridge — the bridge between your 3D printers and filament inventory",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-background font-sans antialiased`}
       >

@@ -1,16 +1,16 @@
 # FilaBridge Web (Next.js)
 
-Front-end do FilaBridge construído com **Next.js 16**, **Tailwind CSS v4** e
-**shadcn/ui**. Serve a UI na porta **5000** e faz proxy de toda a API para o
-backend Go (porta interna 5001), mantendo os paths originais:
+FilaBridge front-end built with **Next.js 16**, **Tailwind CSS v4**, and
+**shadcn/ui**. Serves the UI on port **5000** and proxies the full API to the
+Go backend (internal port 5001), keeping original paths:
 
 - `/api/*` → proxy via route handler ([app/api/[...path]/route.ts](app/api/%5B...path%5D/route.ts))
-- `/ws/*` → proxy de WebSocket via rewrite ([next.config.ts](next.config.ts))
+- `/ws/*` → WebSocket proxy via rewrite ([next.config.ts](next.config.ts))
 
-## Desenvolvimento
+## Development
 
 ```bash
-# 1. Backend Go (em outra aba)
+# 1. Go backend (in another terminal)
 cd ../backend && go run . --port 5001
 
 # 2. Front-end
@@ -18,18 +18,18 @@ npm install
 npm run dev -- -p 5000
 ```
 
-Acesse http://localhost:5000. A URL do backend pode ser alterada com a
-variável `BACKEND_URL` (padrão: `http://127.0.0.1:5001`).
+Open http://localhost:5000. Backend URL can be changed with the
+`BACKEND_URL` variable (default: `http://127.0.0.1:5001`).
 
-## Estrutura
+## Structure
 
-- `app/` — páginas: Dashboard (`/`), NFC (`/nfc`), Configurações (`/settings`)
-- `components/` — cards de impressora (Moonraker/Bambu), combobox de spools, etc.
-- `components/ui/` — componentes shadcn/ui
-- `lib/` — cliente tipado da API, tipos e hook do WebSocket de status
+- `app/` — pages: Dashboard (`/`), NFC (`/nfc`), Settings (`/settings`)
+- `components/` — printer cards (Moonraker/Bambu), spool combobox, etc.
+- `components/ui/` — shadcn/ui components
+- `lib/` — typed API client, types, and status WebSocket hook
 
-## Build de produção
+## Production build
 
 ```bash
-npm run build   # gera saída standalone (usada pelo Dockerfile da raiz)
+npm run build   # standalone output (used by root Dockerfile)
 ```

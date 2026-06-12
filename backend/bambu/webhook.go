@@ -122,7 +122,7 @@ func logWebhookResult(event, trayID string, result WebhookResult) {
 	case "success":
 		log.Printf("Webhook %s (%s): success spool=#%d action=%s deducted=%.2fg", event, trayID, result.SpoolID, result.Action, result.Deducted)
 	case "no_match":
-		log.Printf("Webhook %s (%s): no spool assigned — assign bobina no FilaBridge primeiro", event, trayID)
+		log.Printf("Webhook %s (%s): no spool assigned — assign spool in FilaBridge first", event, trayID)
 	case "ignored":
 		log.Printf("Webhook %s (%s): ignored — %s", event, trayID, result.Reason)
 	default:

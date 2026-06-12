@@ -56,7 +56,7 @@ export default function DashboardPage() {
       setBambuError(null);
     } catch (error) {
       setBambuPrinters([]);
-      setBambuError(error instanceof Error ? error.message : "erro");
+      setBambuError(error instanceof Error ? error.message : "error");
     }
   }, []);
 
@@ -102,7 +102,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Status das impressoras e mapeamento de spools
+            Printer status and spool mapping
           </p>
         </div>
         <Badge
@@ -115,11 +115,11 @@ export default function DashboardPage() {
         >
           {connected ? (
             <>
-              <Wifi className="size-3" /> Tempo real
+              <Wifi className="size-3" /> Live
             </>
           ) : (
             <>
-              <WifiOff className="size-3" /> Reconectando...
+              <WifiOff className="size-3" /> Reconnecting...
             </>
           )}
         </Badge>
@@ -128,11 +128,11 @@ export default function DashboardPage() {
       {spoolmanOk === false && (
         <Alert className="border-warning/40 bg-warning/10 text-warning">
           <CloudOff className="size-4" />
-          <AlertTitle>Spoolman inacessível</AlertTitle>
+          <AlertTitle>Spoolman unreachable</AlertTitle>
           <AlertDescription className="text-warning/90">
-            Não foi possível conectar ao Spoolman. Verifique a URL em{" "}
+            Could not connect to Spoolman. Check the URL in{" "}
             <Link href="/settings" className="underline underline-offset-2">
-              Configurações
+              Settings
             </Link>
             .
           </AlertDescription>
@@ -152,18 +152,18 @@ export default function DashboardPage() {
             <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-border bg-background/60">
               <Printer className="size-7 text-muted-foreground" />
             </div>
-            <CardTitle className="text-lg">Bem-vindo ao FilaBridge</CardTitle>
+            <CardTitle className="text-lg">Welcome to FilaBridge</CardTitle>
             <CardDescription className="max-w-md">
-              Nenhuma impressora configurada ainda. Adicione sua Snapmaker U1
-              (Moonraker) ou Bambu Lab (Home Assistant) para começar a
-              rastrear o uso de filamento automaticamente.
+              No printers configured yet. Add your Snapmaker U1 (Moonraker) or
+              Bambu Lab (Home Assistant) to start tracking filament usage
+              automatically.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-8">
             <Button asChild>
               <Link href="/settings?tab=printers">
                 <PlugZap className="size-4" />
-                Configurar impressoras
+                Configure printers
               </Link>
             </Button>
           </CardContent>

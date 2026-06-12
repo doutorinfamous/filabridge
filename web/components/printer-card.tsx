@@ -50,13 +50,13 @@ export function PrinterCard({
       await api.mapToolhead(printerName, toolheadId, spoolId);
       toast.success(
         spoolId > 0
-          ? `Spool ${spoolId} atribuído ao ${printerName}`
-          : "Toolhead esvaziado"
+          ? `Spool ${spoolId} assigned to ${printerName}`
+          : "Toolhead cleared"
       );
       onChanged();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao atribuir spool"
+        error instanceof Error ? error.message : "Failed to assign spool"
       );
     }
   };
@@ -85,7 +85,7 @@ export function PrinterCard({
 
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Spools por toolhead
+            Spools per toolhead
           </p>
           {toolheadIds.map((toolheadId) => {
             const mapping = mappings?.[toolheadId];
@@ -124,7 +124,7 @@ export function PrinterCard({
                       href={`${spoolmanUrl}/spool/show/${current.id}`}
                       target="_blank"
                       rel="noreferrer"
-                      title="Abrir no Spoolman"
+                      title="Open in Spoolman"
                     >
                       <ExternalLink className="size-4" />
                     </a>

@@ -41,15 +41,15 @@ function bambuSlotLabel(entry: NfcUrlEntry): string {
 
 function entryTitle(entry: NfcUrlEntry): string {
   if (entry.type === "filament") {
-    return `[${entry.filament_id}] ${entry.filament_name || "Filamento sem nome"}`;
+    return `[${entry.filament_id}] ${entry.filament_name || "Unnamed filament"}`;
   }
   if (entry.type === "spool") {
-    return `[${entry.spool_id}] ${entry.spool_name || "Spool sem nome"}`;
+    return `[${entry.spool_id}] ${entry.spool_name || "Unnamed spool"}`;
   }
   if (entry.location_type === "ams_slot") {
     return bambuSlotLabel(entry);
   }
-  return entry.display_name || entry.location_name || "Local";
+  return entry.display_name || entry.location_name || "Location";
 }
 
 function entrySubtitle(entry: NfcUrlEntry): string {
@@ -68,8 +68,8 @@ function entrySubtitle(entry: NfcUrlEntry): string {
     return printer ? `${printer} · Bambu AMS` : "Slot AMS (Bambu)";
   }
   return entry.location_type === "toolhead"
-    ? "Toolhead da impressora"
-    : "Local de armazenamento";
+    ? "Printer toolhead"
+    : "Storage location";
 }
 
 function entryKey(entry: NfcUrlEntry): string {
@@ -104,7 +104,7 @@ export default function NfcPage() {
       .catch((error) => {
         setEntries([]);
         toast.error(
-          error instanceof Error ? error.message : "Falha ao carregar URLs NFC"
+          error instanceof Error ? error.message : "Failed to load NFC URLs"
         );
       });
   }, []);
@@ -124,9 +124,9 @@ export default function NfcPage() {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-      toast.success("URL copiada");
+      toast.success("URL copied");
     } catch {
-      toast.error("Não foi possível copiar");
+      toast.error("Could not copy");
     }
   };
 
@@ -149,8 +149,8 @@ export default function NfcPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">NFC & QR</h1>
         <p className="text-sm text-muted-foreground">
-          Gere URLs e QR codes para programar tags NFC de spools, filamentos e
-          locais
+          Generate URLs and QR codes to program NFC tags for spools, filaments,
+          and locations
         </p>
       </header>
 
@@ -160,10 +160,10 @@ export default function NfcPage() {
             <Tag className="size-4" /> Spools
           </TabsTrigger>
           <TabsTrigger value="filament">
-            <Palette className="size-4" /> Filamentos
+            <Palette className="size-4" /> Filaments
           </TabsTrigger>
           <TabsTrigger value="location">
-            <MapPin className="size-4" /> Locais
+            <MapPin className="size-4" /> Locations
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -177,7 +177,7 @@ export default function NfcPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar..."
+                placeholder="Search..."
                 className="pl-9"
               />
             </div>
@@ -190,7 +190,7 @@ export default function NfcPage() {
                 </div>
               ) : filtered.length === 0 ? (
                 <p className="px-2 py-8 text-center text-sm text-muted-foreground">
-                  Nada encontrado.
+                  Nothing found.
                 </p>
               ) : (
                 <div key={tab} className="space-y-1">
@@ -252,7 +252,7 @@ export default function NfcPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    QR indisponível para este item.
+                    QR unavailable for this item.
                   </p>
                 )}
                 <div className="flex w-full max-w-md items-center gap-2">
@@ -263,7 +263,7 @@ export default function NfcPage() {
                     variant="outline"
                     size="icon"
                     onClick={() => copyUrl(selected.url)}
-                    title="Copiar URL"
+                    title="Copy URL"
                   >
                     {copied ? (
                       <Check className="size-4 text-success" />
@@ -273,13 +273,12 @@ export default function NfcPage() {
                   </Button>
                 </div>
                 <ol className="max-w-md list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
-                  <li>Abra o NFC Tools Pro no celular</li>
+                  <li>Open NFC Tools Pro on your phone</li>
                   <li>
-                    Toque em &quot;Escrever&quot; → &quot;Adicionar registro&quot; →
-                    URL
+                    Tap &quot;Write&quot; → &quot;Add a record&quot; → URL
                   </li>
-                  <li>Escaneie este QR code (ou cole a URL)</li>
-                  <li>Grave a tag NFC e teste com o celular</li>
+                  <li>Scan this QR code (or paste the URL)</li>
+                  <li>Write the NFC tag and test with your phone</li>
                 </ol>
                 {filamentUrl ? (
                   <a
@@ -288,7 +287,7 @@ export default function NfcPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
                   >
-                    Ver filamento no Spoolman
+                    View filament in Spoolman
                     <ExternalLink className="size-3" />
                   </a>
                 ) : null}
@@ -296,9 +295,9 @@ export default function NfcPage() {
             ) : (
               <div className="text-center text-muted-foreground">
                 <Nfc className="mx-auto mb-3 size-10 opacity-40" />
-                <p className="text-sm font-medium">Selecione um item</p>
+                <p className="text-sm font-medium">Select an item</p>
                 <p className="text-xs">
-                  Escolha um item na lista para gerar o QR code
+                  Choose an item from the list to generate the QR code
                 </p>
               </div>
             )}

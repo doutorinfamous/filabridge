@@ -58,7 +58,7 @@ export function PrintJobSection({ data }: { data: PrinterData }) {
     <div className="min-w-0 space-y-2 overflow-hidden rounded-lg border border-border/60 bg-background/40 p-3">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <p className="min-w-0 flex-1 truncate text-sm font-medium">
-          {data.job_name || "Trabalho em andamento"}
+          {data.job_name || "Job in progress"}
         </p>
         <span className="shrink-0 text-sm font-semibold tabular-nums">
           {pct.toFixed(1)}%
@@ -70,16 +70,16 @@ export function PrintJobSection({ data }: { data: PrinterData }) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <Clock className="size-3" />
-          Decorrido: {formatDuration(data.print_duration)}
+          Elapsed: {formatDuration(data.print_duration)}
         </span>
         <span className="flex items-center gap-1">
           <Timer className="size-3" />
-          Restante: {formatDuration(data.time_remaining)}
+          Remaining: {formatDuration(data.time_remaining)}
         </span>
         {data.current_layer != null && data.total_layer != null && (
           <span className="flex items-center gap-1">
             <Layers className="size-3" />
-            Camada {data.current_layer} / {data.total_layer}
+            Layer {data.current_layer} / {data.total_layer}
           </span>
         )}
       </div>

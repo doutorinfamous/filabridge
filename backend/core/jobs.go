@@ -301,7 +301,7 @@ func (b *FilamentBridge) ProcessFilamentUsage(printerID string, filamentUsage ma
 	for _, toolheadID := range unmappedToolheads {
 		weight := filamentUsage[toolheadID]
 		errMsg := fmt.Sprintf(
-			"G-code indica %.2fg no extruder %d, mas nenhum spool está mapeado no %s. Mapeie o spool no toolhead correto ou configure o extruder certo no Snapmaker Orca.",
+			"G-code reports %.2fg on extruder %d, but no spool is mapped to %s. Map a spool to the correct toolhead or configure the correct extruder in Snapmaker Orca.",
 			weight, toolheadID, DefaultToolheadDisplayName(toolheadID),
 		)
 		b.AddPrintError(PrintErrorInput{

@@ -56,7 +56,7 @@ function SpoolOption({
         <span className="block font-mono text-sm font-semibold">#{spool.id}</span>
         <span className="block truncate text-xs text-white/60">
           {[weight, spool.location].filter(Boolean).join(" · ") ||
-            "Sem localização"}
+            "No location"}
         </span>
       </span>
     </button>
@@ -89,11 +89,11 @@ export function ScanSpoolPicker({
           FilaBridge · NFC
         </p>
         <h1 className="mt-2 text-xl font-semibold tracking-tight">
-          Escolha o spool
+          Choose spool
         </h1>
         <p className="mt-1 text-sm text-white/50">
-          {filament.name?.trim() || `Filamento #${filament.id}`} tem{" "}
-          {filament.candidates.length} spools disponíveis
+          {filament.name?.trim() || `Filament #${filament.id}`} has{" "}
+          {filament.candidates.length} available spools
         </p>
       </header>
 
@@ -107,7 +107,7 @@ export function ScanSpoolPicker({
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
           <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
-            spools disponíveis
+            available spools
           </p>
           <div className="space-y-2">
             {filament.candidates.map((spool) => (
@@ -123,7 +123,7 @@ export function ScanSpoolPicker({
           {selecting ? (
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-white/60">
               <Loader2 className="size-4 animate-spin" />
-              Confirmando spool...
+              Confirming spool...
             </div>
           ) : null}
         </div>

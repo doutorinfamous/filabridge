@@ -266,9 +266,9 @@ export const api = {
 };
 
 export function spoolLabel(spool: Spool): string {
-  const material = spool.material || "Material desconhecido";
-  const brand = spool.brand || "Marca desconhecida";
-  const name = spool.name || "Sem nome";
+  const material = spool.material || "Unknown material";
+  const brand = spool.brand || "Unknown brand";
+  const name = spool.name || "Unnamed";
   return `[${spool.id}] ${material} · ${brand} · ${name}`;
 }
 

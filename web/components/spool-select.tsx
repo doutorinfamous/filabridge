@@ -147,7 +147,7 @@ export function SpoolSelect({
             ) : (
               <>
                 <CircleOff className="size-3.5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Vazio</span>
+                <span className="text-sm text-muted-foreground">Empty</span>
               </>
             )}
           </span>
@@ -166,15 +166,15 @@ export function SpoolSelect({
         align="start"
       >
         <Command>
-          <CommandInput placeholder="Buscar spool..." />
+          <CommandInput placeholder="Search spools..." />
           <CommandList>
             <CommandEmpty>
-              {loading ? "Carregando..." : "Nenhum spool encontrado"}
+              {loading ? "Loading..." : "No spools found"}
             </CommandEmpty>
             <CommandGroup>
-              <CommandItem value="__empty__ vazio" onSelect={() => pick(0)}>
+              <CommandItem value="__empty__ empty" onSelect={() => pick(0)}>
                 <CircleOff className="size-3.5 text-muted-foreground" />
-                <span>Vazio (remover spool)</span>
+                <span>Empty (remove spool)</span>
                 {!currentSpool && <Check className="ml-auto size-4" />}
               </CommandItem>
               {options.map((spool) => (

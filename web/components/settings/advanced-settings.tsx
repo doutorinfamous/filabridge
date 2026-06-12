@@ -55,23 +55,23 @@ export function TimeoutSettings() {
     const downloadTimeout = Number(form.printer_file_download_timeout);
     const spoolmanTimeout = Number(form.spoolman_timeout);
     if (printerTimeout < 5 || printerTimeout > 300) {
-      toast.error("Timeout do Moonraker deve estar entre 5 e 300 segundos");
+      toast.error("Moonraker timeout must be between 5 and 300 seconds");
       return;
     }
     if (downloadTimeout < 10 || downloadTimeout > 600) {
-      toast.error("Timeout de download deve estar entre 10 e 600 segundos");
+      toast.error("Download timeout must be between 10 and 600 seconds");
       return;
     }
     if (spoolmanTimeout < 5 || spoolmanTimeout > 300) {
-      toast.error("Timeout do Spoolman deve estar entre 5 e 300 segundos");
+      toast.error("Spoolman timeout must be between 5 and 300 seconds");
       return;
     }
     setSaving(true);
     try {
       await api.updateConfig(form);
-      toast.success("Timeouts salvos");
+      toast.success("Timeouts saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -87,9 +87,9 @@ export function TimeoutSettings() {
   return (
     <Card className="border-border/70 bg-card/60">
       <CardHeader>
-        <CardTitle className="text-base">Timeouts de API</CardTitle>
+        <CardTitle className="text-base">API timeouts</CardTitle>
         <CardDescription>
-          Ajuste apenas se estiver enfrentando problemas de conexão
+          Adjust only if you are experiencing connection issues
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -109,7 +109,7 @@ export function TimeoutSettings() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="download_timeout">Download de G-code (s)</Label>
+            <Label htmlFor="download_timeout">G-code download (s)</Label>
             <Input
               id="download_timeout"
               type="number"
@@ -147,11 +147,11 @@ export function TimeoutSettings() {
             ) : (
               <Save className="size-4" />
             )}
-            Salvar timeouts
+            Save timeouts
           </Button>
           <Button variant="outline" onClick={reset}>
             <RotateCcw className="size-4" />
-            Restaurar padrões
+            Restore defaults
           </Button>
         </div>
       </CardContent>
@@ -190,9 +190,9 @@ export function AutoAssignSettings() {
     setSaving(true);
     try {
       await api.updateAutoAssign(enabled, location);
-      toast.success("Configuração de atribuição automática salva");
+      toast.success("Auto-assign configuration saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -201,13 +201,10 @@ export function AutoAssignSettings() {
   return (
     <Card className="border-border/70 bg-card/60">
       <CardHeader>
-        <CardTitle className="text-base">
-          Atribuição automática de spool anterior
-        </CardTitle>
+        <CardTitle className="text-base">Previous spool auto-assign</CardTitle>
         <CardDescription>
-          Quando um novo spool é colocado em um toolhead, o spool anterior é
-          movido automaticamente para um local padrão (caixa, prateleira,
-          drybox)
+          When a new spool is placed on a toolhead, the previous spool is
+          automatically moved to a default location (box, shelf, drybox)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -219,15 +216,15 @@ export function AutoAssignSettings() {
             onCheckedChange={setEnabled}
           />
           <Label htmlFor="auto-assign">
-            Mover spool anterior para o local padrão
+            Move previous spool to default location
           </Label>
         </div>
         {enabled && (
           <div className="space-y-1.5">
-            <Label>Local padrão</Label>
+            <Label>Default location</Label>
             <Select value={location || undefined} onValueChange={setLocation}>
               <SelectTrigger className="w-full max-w-sm">
-                <SelectValue placeholder="Selecione um local..." />
+                <SelectValue placeholder="Select a location..." />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((name) => (
@@ -238,7 +235,7 @@ export function AutoAssignSettings() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Os locais são gerenciados no Spoolman.
+              Locations are managed in Spoolman.
             </p>
           </div>
         )}
@@ -248,7 +245,7 @@ export function AutoAssignSettings() {
           ) : (
             <Save className="size-4" />
           )}
-          Salvar
+          Save
         </Button>
       </CardContent>
     </Card>

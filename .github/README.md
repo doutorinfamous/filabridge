@@ -125,10 +125,10 @@ The docker-compose.yml automatically sets the `FILABRIDGE_DB_PATH` environment v
    git clone https://github.com/needo37/filabridge.git
    cd filabridge
 
-   # Backend (Go API — porta 5001)
+   # Backend (Go API — port 5001)
    cd backend && go build -o filabridge . && cd ..
 
-   # Front-end (Next.js — porta 5000, faz proxy para a API)
+   # Front-end (Next.js — port 5000, proxies to the API)
    cd web && npm install && npm run build && cd ..
    ```
 
@@ -221,20 +221,20 @@ The web interface also provides REST API endpoints:
 
 ```
 filabridge/
-├── backend/               # Go API (porta interna 5001)
+├── backend/               # Go API (internal port 5001)
 │   ├── main.go            # Entry point (--web-only / --bridge-only / --port)
-│   ├── core/              # Bridge, SQLite, config e contabilidade de filamento
-│   ├── snapmaker/         # Snapmaker U1: cliente Moonraker, G-code, monitor
-│   ├── bambu/             # Bambu Lab: descoberta HA, AMS trays, webhooks, YAML
-│   ├── spoolman/          # Cliente da API do Spoolman
-│   ├── homeassistant/     # Cliente REST/WebSocket do Home Assistant
-│   ├── nfc/               # Sessões NFC (spool + local)
-│   └── server/            # API HTTP (Gin) + WebSocket /ws/status
-├── web/                   # Front-end Next.js + shadcn/ui (porta 5000)
-│   ├── app/               # Dashboard, NFC, Configurações + proxy /api
-│   ├── components/        # Componentes (cards de impressora, comboboxes, etc.)
-│   └── lib/               # Cliente da API, tipos e hook do WebSocket
-├── docker/entrypoint.sh   # Sobe Go (5001) + Next.js (5000) no mesmo container
+│   ├── core/              # Bridge, SQLite, config, and filament accounting
+│   ├── snapmaker/         # Snapmaker U1: Moonraker client, G-code, monitor
+│   ├── bambu/             # Bambu Lab: HA discovery, AMS trays, webhooks, YAML
+│   ├── spoolman/          # Spoolman API client
+│   ├── homeassistant/     # Home Assistant REST/WebSocket client
+│   ├── nfc/               # NFC sessions (spool + location)
+│   └── server/            # HTTP API (Gin) + WebSocket /ws/status
+├── web/                   # Next.js + shadcn/ui front-end (port 5000)
+│   ├── app/               # Dashboard, NFC, Settings + /api proxy
+│   ├── components/        # Printer cards, comboboxes, etc.
+│   └── lib/               # API client, types, and WebSocket hook
+├── docker/entrypoint.sh   # Runs Go (5001) + Next.js (5000) in one container
 ├── Dockerfile             # Build multi-stage (Go + Node)
 └── docker-compose.yml
 ```
@@ -293,20 +293,20 @@ The service logs important events to the console. Look for:
 ## Development
 
 ```bash
-# Backend (Go API em http://localhost:5001)
+# Backend (Go API at http://localhost:5001)
 cd backend
 go build ./...
 go test ./...
 go run . --port 5001
 
-# Front-end (UI em http://localhost:5000, com proxy para a API)
+# Front-end (UI at http://localhost:5000, proxies to the API)
 cd web
 npm install
 npm run dev -- -p 5000
 ```
 
-Acesse `http://localhost:5000` — o Next.js encaminha `/api/*` e `/ws/*` para o
-backend Go automaticamente (configurável via `BACKEND_URL`).
+Open `http://localhost:5000` — Next.js forwards `/api/*` and `/ws/*` to the
+Go backend automatically (configurable via `BACKEND_URL`).
 
 ## Contributing
 

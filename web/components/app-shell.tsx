@@ -15,15 +15,15 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/history", label: "Histórico", icon: History },
+  { href: "/history", label: "History", icon: History },
   { href: "/nfc", label: "NFC & QR", icon: Nfc },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const tempNavItems = [
   {
     href: "/temp/database",
-    label: "Banco de Dados",
+    label: "Database",
     icon: Database,
     className: "text-amber-600/90 hover:text-amber-500",
   },

@@ -71,41 +71,41 @@ function PrinterFormFields({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="printer-name">Nome *</Label>
+        <Label htmlFor="printer-name">Name *</Label>
         <Input
           id="printer-name"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder="Ex.: Snapmaker U1"
+          placeholder="e.g. Snapmaker U1"
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="printer-ip">Hostname ou IP *</Label>
+        <Label htmlFor="printer-ip">Hostname or IP *</Label>
         <Input
           id="printer-ip"
           value={form.ip_address}
           onChange={(e) =>
             setForm((f) => ({ ...f, ip_address: e.target.value }))
           }
-          placeholder="192.168.1.100 ou printer.local"
+          placeholder="192.168.1.100 or printer.local"
         />
         <p className="text-xs text-muted-foreground">
-          Endereço da instância Moonraker da Snapmaker U1
+          Moonraker instance address for the Snapmaker U1
         </p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="printer-key">API Key (opcional)</Label>
+        <Label htmlFor="printer-key">API Key (optional)</Label>
         <Input
           id="printer-key"
           type="password"
           value={form.api_key}
           onChange={(e) => setForm((f) => ({ ...f, api_key: e.target.value }))}
-          placeholder="Apenas se o Moonraker exigir autenticação"
+          placeholder="Only if Moonraker requires authentication"
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>Modelo</Label>
+          <Label>Model</Label>
           <Select
             value={form.model}
             onValueChange={(v) => setForm((f) => ({ ...f, model: v }))}
@@ -115,7 +115,7 @@ function PrinterFormFields({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Snapmaker U1">Snapmaker U1</SelectItem>
-              <SelectItem value="Unknown">Desconhecido</SelectItem>
+              <SelectItem value="Unknown">Unknown</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -167,7 +167,7 @@ function ToolheadNamesEditor({
         return name.trim() !== "" && name.trim() !== original;
       });
       if (updates.length === 0) {
-        toast.info("Nada para salvar");
+        toast.info("Nothing to save");
         return;
       }
       await Promise.all(
@@ -175,10 +175,10 @@ function ToolheadNamesEditor({
           api.setToolheadName(printerId, Number(id), name.trim())
         )
       );
-      toast.success("Nomes dos toolheads salvos");
+      toast.success("Toolhead names saved");
       onSaved();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar");
+      toast.error(error instanceof Error ? error.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -202,7 +202,7 @@ function ToolheadNamesEditor({
       ))}
       <Button size="sm" onClick={save} disabled={saving}>
         {saving && <Loader2 className="size-3.5 animate-spin" />}
-        Salvar nomes
+        Save names
       </Button>
     </div>
   );
@@ -236,7 +236,7 @@ export function PrintersSettings() {
       setPrinters(entries);
     } catch {
       setPrinters({});
-      toast.error("Falha ao carregar impressoras");
+      toast.error("Failed to load printers");
     }
   }, []);
 
@@ -247,7 +247,7 @@ export function PrintersSettings() {
 
   const addPrinter = async () => {
     if (!addForm.name.trim() || !addForm.ip_address.trim()) {
-      toast.error("Preencha nome e endereço");
+      toast.error("Enter name and address");
       return;
     }
     setAddBusy(true);
@@ -270,13 +270,13 @@ export function PrintersSettings() {
         api_key: addForm.api_key,
         toolheads: addForm.toolheads,
       });
-      toast.success("Impressora adicionada");
+      toast.success("Printer added");
       setAddOpen(false);
       setAddForm(emptyForm);
       load();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao adicionar impressora"
+        error instanceof Error ? error.message : "Failed to add printer"
       );
     } finally {
       setAddBusy(false);
@@ -305,12 +305,12 @@ export function PrintersSettings() {
         api_key: editForm.api_key,
         toolheads: editForm.toolheads,
       });
-      toast.success("Impressora atualizada");
+      toast.success("Printer updated");
       setEditId(null);
       load();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao atualizar impressora"
+        error instanceof Error ? error.message : "Failed to update printer"
       );
     } finally {
       setEditBusy(false);
@@ -318,14 +318,14 @@ export function PrintersSettings() {
   };
 
   const remove = async (printerId: string, name: string) => {
-    if (!confirm(`Remover a impressora "${name}"?`)) return;
+    if (!confirm(`Remove printer "${name}"?`)) return;
     try {
       await api.deletePrinter(printerId);
-      toast.success("Impressora removida");
+      toast.success("Printer removed");
       load();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao remover impressora"
+        error instanceof Error ? error.message : "Failed to remove printer"
       );
     }
   };
@@ -341,7 +341,7 @@ export function PrintersSettings() {
       setBambuError(
         error instanceof Error
           ? error.message
-          : "Falha na descoberta — configure o Home Assistant primeiro"
+          : "Discovery failed — configure Home Assistant first"
       );
       setBambuList([]);
     }
@@ -351,13 +351,13 @@ export function PrintersSettings() {
     try {
       await api.registerBambuPrinter(printer);
       toast.success(
-        "Impressora Bambu registrada! Gere o pacote HA e reinicie o Home Assistant."
+        "Bambu printer registered! Generate the HA package and restart Home Assistant."
       );
       setBambuOpen(false);
       load();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao registrar impressora"
+        error instanceof Error ? error.message : "Failed to register printer"
       );
     }
   };
@@ -372,12 +372,12 @@ export function PrintersSettings() {
       a.click();
       URL.revokeObjectURL(a.href);
       toast.success(
-        `YAML baixado. Salve em config/packages/${data.filename} e reinicie o HA por completo. Webhook: ${data.webhook_url}`,
+        `YAML downloaded. Save to config/packages/${data.filename} and fully restart HA. Webhook: ${data.webhook_url}`,
         { duration: 12000 }
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao gerar configuração"
+        error instanceof Error ? error.message : "Failed to generate configuration"
       );
     }
   };
@@ -386,7 +386,7 @@ export function PrintersSettings() {
     try {
       const data = await api.validateHA(printerId);
       if (data.all_ok) {
-        toast.success("Home Assistant: as 4 entidades do FilaBridge estão OK");
+        toast.success("Home Assistant: all 4 FilaBridge entities are OK");
         return;
       }
       const missing = data.checks
@@ -394,12 +394,12 @@ export function PrintersSettings() {
         .map((c) => c.entity_id)
         .join(", ");
       toast.error(
-        `Entidades faltando no HA: ${missing}. Reinstale o pacote ${data.package_file} e reinicie o HA.`,
+        `Missing entities in HA: ${missing}. Reinstall package ${data.package_file} and restart HA.`,
         { duration: 12000 }
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao validar HA"
+        error instanceof Error ? error.message : "Failed to validate HA"
       );
     }
   };
@@ -408,7 +408,7 @@ export function PrintersSettings() {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => setAddOpen(true)}>
-          <Plus className="size-4" /> Impressora Moonraker
+          <Plus className="size-4" /> Moonraker printer
         </Button>
         <Button variant="outline" onClick={openBambuDiscovery}>
           <Plus className="size-4" /> Bambu Lab (HA)
@@ -423,7 +423,7 @@ export function PrintersSettings() {
       ) : Object.keys(printers).length === 0 ? (
         <Card className="border-dashed bg-card/40">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Nenhuma impressora configurada. Adicione uma acima para começar.
+            No printers configured. Add one above to get started.
           </CardContent>
         </Card>
       ) : (
@@ -445,7 +445,7 @@ export function PrintersSettings() {
                       <CardTitle className="text-base">{printer.name}</CardTitle>
                       <CardDescription>
                         {isBambu
-                          ? `ha-bambulab · prefixo ${printer.ha_prefix || "?"}`
+                          ? `ha-bambulab · prefix ${printer.ha_prefix || "?"}`
                           : `${printer.model || "Moonraker"} · ${printer.ip_address}`}
                       </CardDescription>
                     </div>
@@ -465,14 +465,14 @@ export function PrintersSettings() {
                           size="sm"
                           onClick={() => downloadHAConfig(printerId)}
                         >
-                          <Download className="size-3.5" /> Pacote HA
+                          <Download className="size-3.5" /> HA package
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => validateHA(printerId)}
                         >
-                          <CheckCircle2 className="size-3.5" /> Validar HA
+                          <CheckCircle2 className="size-3.5" /> Validate HA
                         </Button>
                       </>
                     ) : (
@@ -482,7 +482,7 @@ export function PrintersSettings() {
                           size="sm"
                           onClick={() => openEdit(printerId, printer)}
                         >
-                          <Pencil className="size-3.5" /> Editar
+                          <Pencil className="size-3.5" /> Edit
                         </Button>
                         <Button
                           variant="outline"
@@ -503,7 +503,7 @@ export function PrintersSettings() {
                       className="text-destructive hover:text-destructive"
                       onClick={() => remove(printerId, printer.name)}
                     >
-                      <Trash2 className="size-3.5" /> Remover
+                      <Trash2 className="size-3.5" /> Remove
                     </Button>
                   </div>
                   {!isBambu && renamingId === printerId && (
@@ -527,19 +527,19 @@ export function PrintersSettings() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar impressora Moonraker</DialogTitle>
+            <DialogTitle>Add Moonraker printer</DialogTitle>
             <DialogDescription>
-              Snapmaker U1 ou outra impressora Klipper/Moonraker
+              Snapmaker U1 or another Klipper/Moonraker printer
             </DialogDescription>
           </DialogHeader>
           <PrinterFormFields form={addForm} setForm={setAddForm} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button onClick={addPrinter} disabled={addBusy}>
               {addBusy && <Loader2 className="size-4 animate-spin" />}
-              {addBusy ? "Detectando modelo..." : "Adicionar"}
+              {addBusy ? "Detecting model..." : "Add"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -549,16 +549,16 @@ export function PrintersSettings() {
       <Dialog open={editId !== null} onOpenChange={(o) => !o && setEditId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar impressora</DialogTitle>
+            <DialogTitle>Edit printer</DialogTitle>
           </DialogHeader>
           <PrinterFormFields form={editForm} setForm={setEditForm} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditId(null)}>
-              Cancelar
+              Cancel
             </Button>
             <Button onClick={saveEdit} disabled={editBusy}>
               {editBusy && <Loader2 className="size-4 animate-spin" />}
-              Salvar
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -568,24 +568,23 @@ export function PrintersSettings() {
       <Dialog open={bambuOpen} onOpenChange={setBambuOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar Bambu Lab (Home Assistant)</DialogTitle>
+            <DialogTitle>Add Bambu Lab (Home Assistant)</DialogTitle>
             <DialogDescription>
-              Impressoras descobertas via ha-bambulab. Configure URL e token do
-              HA na aba Geral antes.
+              Printers discovered via ha-bambulab. Configure HA URL and token
+              on the General tab first.
             </DialogDescription>
           </DialogHeader>
           <Separator />
           {bambuList === null ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Descobrindo
-              impressoras...
+              <Loader2 className="size-4 animate-spin" /> Discovering
+              printers...
             </div>
           ) : bambuError ? (
             <p className="py-4 text-sm text-destructive">{bambuError}</p>
           ) : bambuList.length === 0 ? (
             <p className="py-4 text-sm text-muted-foreground">
-              Nenhuma impressora Bambu não registrada encontrada no Home
-              Assistant.
+              No unregistered Bambu printers found in Home Assistant.
             </p>
           ) : (
             <div className="space-y-2">
