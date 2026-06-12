@@ -101,7 +101,7 @@ export function SpoolmanSettings() {
         <CardTitle className="text-base">Spoolman</CardTitle>
         <CardDescription>
           Filament inventory used to debit print consumption — required for
-          FilaBridge to work
+          FilaBridge+ to work
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -269,7 +269,7 @@ export function HomeAssistantSettings() {
         </Field>
         <Field
           id="filabridge_public_url"
-          label="FilaBridge public URL (webhooks and NFC/QR tags)"
+          label="FilaBridge+ public URL (webhooks and NFC/QR tags)"
           hint="Used in HA webhooks and as the base for NFC/QR tag URLs — must be reachable on your network (do not use localhost or 0.0.0.0)"
         >
           <Input
@@ -302,7 +302,7 @@ export function HomeAssistantSettings() {
         </div>
         <p className="text-xs text-muted-foreground">
           Full guide: <code>docs/home-assistant-setup.md</code> in the
-          FilaBridge repository.
+          FilaBridge+ repository.
         </p>
       </CardContent>
     </Card>

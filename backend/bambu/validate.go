@@ -84,7 +84,7 @@ func ValidateHAEntities(prefix string, states []homeassistant.State) HAValidatio
 	}
 	if !allOK {
 		result.FixSteps = []string{
-			"In FilaBridge, click HA Config and download the full YAML (must contain utility_meter:, template:, automation:).",
+			"In FilaBridge+, click HA Config and download the full YAML (must contain utility_meter:, template:, automation:).",
 			"Replace config/packages/" + result.PackageFile + " in Home Assistant (lowercase filename).",
 			"Fully restart Home Assistant (do not only reload automations).",
 			"Confirm all 4 entities in Developer Tools → States.",

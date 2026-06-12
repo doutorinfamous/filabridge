@@ -86,7 +86,7 @@ export function ScanSpoolPicker({
     <div className="flex flex-1 flex-col px-5 py-8">
       <header className="mb-8 text-center">
         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
-          FilaBridge · NFC
+          FilaBridge+ · NFC
         </p>
         <h1 className="mt-2 text-xl font-semibold tracking-tight">
           Choose spool

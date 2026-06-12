@@ -32,7 +32,7 @@ func (ws *WebServer) registerBambuRoutes(api *gin.RouterGroup) {
 
 func (ws *WebServer) bambuWebhookHealthHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "FilaBridge webhook endpoint — use POST with JSON body",
+		"message": "FilaBridge+ webhook endpoint — use POST with JSON body",
 		"events":  []string{"spool_usage", "tray_change", "print_started", "print_finished"},
 	})
 }

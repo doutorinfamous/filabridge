@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 Connect Spoolman
               </p>
               <p className="text-sm text-balance text-muted-foreground">
-                Spoolman is the filament inventory at the heart of FilaBridge —
+                Spoolman is the filament inventory at the heart of FilaBridge+ —
                 it is essential for tracking spools and debiting filament usage.
                 Set it up to get started.
               </p>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                   Spoolman is unreachable
                 </p>
                 <p className="text-sm text-balance text-muted-foreground">
-                  FilaBridge needs a working Spoolman connection to track spools
+                  FilaBridge+ needs a working Spoolman connection to track spools
                   and debit filament usage. Could not connect to the configured
                   URL — make sure Spoolman is running and the address is correct.
                 </p>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
             </div>
             <div className="mx-auto max-w-md space-y-2">
               <p className="text-lg font-semibold leading-none">
-                Welcome to FilaBridge
+                Welcome to FilaBridge+
               </p>
               <p className="text-sm text-balance text-muted-foreground">
                 No printers configured yet. Add your Snapmaker U1 (Moonraker) or

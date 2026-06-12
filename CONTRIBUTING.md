@@ -1,6 +1,6 @@
-# Contributing to FilaBridge
+# Contributing to FilaBridge+
 
-Thank you for considering contributing to FilaBridge! This document provides guidelines and information for contributors.
+Thank you for considering contributing to FilaBridge+! This document provides guidelines and information for contributors.
 
 ## How to Contribute
 
@@ -19,7 +19,7 @@ Include in your bug report:
 - **Environment**: OS, Go version, Node.js version (for web changes), printer model and integration path:
   - **Snapmaker U1** — Moonraker URL, toolhead count
   - **Bambu Lab** — Home Assistant version, ha-bambulab version, LAN vs Cloud
-- **Logs**: Relevant log output from FilaBridge, Moonraker, or Home Assistant (sanitize API keys and tokens!)
+- **Logs**: Relevant log output from FilaBridge+, Moonraker, or Home Assistant (sanitize API keys and tokens!)
 
 ### Suggesting Features
 
@@ -191,7 +191,7 @@ filabridge/
 | Snapmaker U1 (and other Moonraker/Klipper) | Direct Moonraker API | G-code parsing on print complete |
 | Bambu Lab | Home Assistant + ha-bambulab | HA webhooks (`spool_usage`, `tray_change`, print events) |
 
-Spoolman is required for all paths — FilaBridge debits inventory and mirrors tray assignments there.
+Spoolman is required for all paths — FilaBridge+ debits inventory and mirrors tray assignments there.
 
 ## Testing
 
@@ -270,7 +270,7 @@ Looking for ideas? Here are some areas that need help:
 
 ## License
 
-By contributing to FilaBridge, you agree that your contributions will be licensed under the GNU General Public License v3.0.
+By contributing to FilaBridge+, you agree that your contributions will be licensed under the GNU General Public License v3.0.
 
 ## Questions?
 
@@ -279,4 +279,4 @@ If you have questions about contributing:
 2. Open a new discussion
 3. Reach out to the maintainers
 
-Thank you for contributing to FilaBridge!
+Thank you for contributing to FilaBridge+!

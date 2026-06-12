@@ -1,4 +1,4 @@
-# FilaBridge
+# FilaBridge+
 
 **UPDATE: DEVELOPMENT IS PERMANENTLY HALTED AFTER PRUSA STOLE THOUSANDS OF DOLLARS FROM ME AND OVER SIX MONTHS OF MY LIFE DUE TO THEIR SHITTY SUPPORT AND NOT ABLE TO MAKE WORKING PRINTERS.**
 
@@ -29,9 +29,9 @@ I run multiple 3D printers and use Spoolman to track my filament inventory. The 
 - 📱 **Smart Scanning**: Two-step NFC workflow - scan spool + location (or location + spool) for instant assignment
 - 📍 **Location Tracking**: Track spools in custom locations (dryboxes) or printer toolheads
 
-## Why FilaBridge?
+## Why FilaBridge+?
 
-Managing filament inventory across multiple 3D printers is tedious. FilaBridge automates this by:
+Managing filament inventory across multiple 3D printers is tedious. FilaBridge+ automates this by:
 - Monitoring your printers in real-time with live WebSocket updates
 - Tracking which spools are loaded on which toolheads
 - Automatically updating your Spoolman inventory when prints complete
@@ -44,8 +44,8 @@ No more manual updates or guesswork about remaining filament!
 
 ## Screenshots
 
-![FilaBridge Dashboard](https://github.com/needo37/filabridge/blob/main/screenshots/dashboard.png?raw=true)
-*FilaBridge main dashboard showing printer status and toolhead mappings*
+![FilaBridge+ Dashboard](https://github.com/needo37/filabridge/blob/main/screenshots/dashboard.png?raw=true)
+*FilaBridge+ main dashboard showing printer status and toolhead mappings*
 
 ![Spool Tags Management](https://github.com/needo37/filabridge/blob/main/screenshots/spool_tags.png?raw=true)
 *NFC Management interface for generating QR codes for individual spools*
@@ -74,7 +74,7 @@ No more manual updates or guesswork about remaining filament!
    docker run -d --name spoolman -p 8000:8000 -v spoolman-data:/home/spoolman/data ghcr.io/donkie/spoolman:latest
    ```
 
-2. **Run FilaBridge**:
+2. **Run FilaBridge+**:
    ```bash
    docker run -d --name filabridge -p 5000:5000 \
      -v .:/app/data \
@@ -92,7 +92,7 @@ docker-compose up -d
 
 The docker-compose.yml automatically sets the `FILABRIDGE_DB_PATH` environment variable to `/app/data` to ensure the database persists in the mounted volume.
 
-**Spoolman on the Docker host:** If Spoolman runs outside the FilaBridge container (on your PC or in another container), configure the Spoolman URL in the web UI as `http://host.docker.internal:8000` (adjust the port if needed). Do **not** use `localhost` — inside the container that address points to FilaBridge itself, not your host machine. The compose file includes `extra_hosts: host.docker.internal:host-gateway` for this on Linux; on Docker Desktop for Windows/macOS this hostname works out of the box.
+**Spoolman on the Docker host:** If Spoolman runs outside the FilaBridge+ container (on your PC or in another container), configure the Spoolman URL in the web UI as `http://host.docker.internal:8000` (adjust the port if needed). Do **not** use `localhost` — inside the container that address points to FilaBridge+ itself, not your host machine. The compose file includes `extra_hosts: host.docker.internal:host-gateway` for this on Linux; on Docker Desktop for Windows/macOS this hostname works out of the box.
 
 ### Option 2: Pre-built Binary
 
@@ -111,7 +111,7 @@ The docker-compose.yml automatically sets the `FILABRIDGE_DB_PATH` environment v
    docker run -d --name spoolman -p 8000:8000 -v spoolman-data:/home/spoolman/data ghcr.io/donkie/spoolman:latest
    ```
 
-4. **Start FilaBridge**:
+4. **Start FilaBridge+**:
    ```bash
    ./filabridge
    ```
@@ -137,7 +137,7 @@ The docker-compose.yml automatically sets the `FILABRIDGE_DB_PATH` environment v
    docker run -d --name spoolman -p 8000:8000 -v spoolman-data:/home/spoolman/data ghcr.io/donkie/spoolman:latest
    ```
 
-3. **Start FilaBridge**:
+3. **Start FilaBridge+**:
    ```bash
    ./filabridge
    ```
@@ -184,7 +184,7 @@ The web interface provides:
 ### Filament Management
 
 1. **Add spools to Spoolman**: Use Spoolman's web interface to add your filament spools
-2. **Map spools to toolheads**: Use the FilaBridge web interface to assign spools with smart search
+2. **Map spools to toolheads**: Use the FilaBridge+ web interface to assign spools with smart search
 3. **Monitor usage**: The system automatically tracks and updates filament usage
 4. **Handle errors**: Acknowledge any print processing errors that require manual intervention
 
@@ -258,9 +258,9 @@ API paths remain exactly the same as before.
    - Verify Spoolman is accessible at the specified URL
 
 3. **Filament usage not tracked**:
-   - Ensure spools are mapped to toolheads in the FilaBridge dashboard
+   - Ensure spools are mapped to toolheads in the FilaBridge+ dashboard
    - Check that prints reach `complete` state (not only paused or error)
-   - If FilaBridge runs in Docker and Spoolman on the host, set Spoolman URL to `http://host.docker.internal:PORT` (not `localhost`)
+   - If FilaBridge+ runs in Docker and Spoolman on the host, set Spoolman URL to `http://host.docker.internal:PORT` (not `localhost`)
    - Review container logs for `Print finished detected` or `complete-state` detection
    - Red error banners appear when G-code parsing fails, no spool is mapped, or Spoolman rejects the update
 
@@ -332,7 +332,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Support the Project
 
-If you find FilaBridge useful:
+If you find FilaBridge+ useful:
 - ⭐ Star the repository
 - 🐛 Report bugs and suggest features
 - 📢 Share it with the 3D printing community

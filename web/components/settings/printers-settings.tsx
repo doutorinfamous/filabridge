@@ -393,7 +393,7 @@ export function PrintersSettings() {
     try {
       const data = await api.validateHA(printerId);
       if (data.all_ok) {
-        toast.success("Home Assistant: all 4 FilaBridge entities are OK");
+        toast.success("Home Assistant: all 4 FilaBridge+ entities are OK");
         return;
       }
       const missing = data.checks

@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FilaBridge",
+  title: "FilaBridge+",
   description:
-    "FilaBridge — the bridge between your 3D printers and filament inventory",
+    "FilaBridge+ — the bridge between your 3D printers and filament inventory",
 };
 
 export default function RootLayout({

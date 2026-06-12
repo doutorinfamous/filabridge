@@ -45,7 +45,7 @@ function SettingsContent() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Spoolman, Home Assistant, printers, and FilaBridge behavior
+          Spoolman, Home Assistant, printers, and FilaBridge+ behavior
         </p>
       </header>
 

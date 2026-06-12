@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link2 className="size-4" />
           </div>
           <div>
-            <p className="text-sm font-semibold leading-tight">FilaBridge</p>
+            <p className="text-sm font-semibold leading-tight">FilaBridge+</p>
             <p className="text-[11px] leading-tight text-muted-foreground">
               Filament inventory bridge
             </p>
@@ -82,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Link2 className="size-3.5" />
           </div>
-          <span className="text-sm font-semibold">FilaBridge</span>
+          <span className="text-sm font-semibold">FilaBridge+</span>
         </div>
         <nav className="flex items-center gap-1">
           {navItems.map((item) => {

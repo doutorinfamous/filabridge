@@ -194,7 +194,7 @@ export function PollingSettings() {
       <CardHeader>
         <CardTitle className="text-base">Polling intervals</CardTitle>
         <CardDescription>
-          How often FilaBridge checks external services for status updates
+          How often FilaBridge+ checks external services for status updates
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

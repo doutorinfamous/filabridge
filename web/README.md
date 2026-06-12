@@ -1,6 +1,6 @@
-# FilaBridge Web (Next.js)
+# FilaBridge+ Web (Next.js)
 
-FilaBridge front-end built with **Next.js 16**, **Tailwind CSS v4**, and
+FilaBridge+ front-end built with **Next.js 16**, **Tailwind CSS v4**, and
 **shadcn/ui**. Serves the UI on port **5000** and proxies the full API to the
 Go backend (internal port 5001), keeping original paths:
 
