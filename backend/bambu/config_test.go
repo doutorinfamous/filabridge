@@ -144,6 +144,8 @@ func TestGenerateAutomationsPrintEndUsesPrintStatus(t *testing.T) {
 	printer := Printer{
 		Prefix:              "03919c461204338",
 		EntityID:            "sensor.bambu_print_status",
+		TaskNameEntity:      "sensor.bambu_lab_a1_task_name",
+		GcodeFileEntity:     "sensor.bambu_lab_a1_gcode_file",
 		PrintWeightEntity:   "sensor.bambu_print_weight",
 		PrintProgressEntity: "sensor.bambu_print_progress",
 	}
@@ -154,9 +156,26 @@ func TestGenerateAutomationsPrintEndUsesPrintStatus(t *testing.T) {
 		"- finish",
 		"trigger.from_state.state in ['running', 'pause', 'prepare', 'slicing', 'failed']",
 		"states('sensor.filabridge_",
+		"states('sensor.bambu_lab_a1_task_name')",
+		"states('sensor.bambu_lab_a1_gcode_file')",
 	} {
 		if !strings.Contains(yaml, want) {
 			t.Errorf("generated automations missing %q", want)
+		}
+	}
+	if strings.Contains(yaml, "state_attr(") && strings.Contains(yaml, "subtask_name") {
+		t.Error("generated automations should not read subtask_name from print_status attributes")
+	}
+}
+
+func TestBuildJobNameTemplateUsesTaskNameSensor(t *testing.T) {
+	got := buildJobNameTemplate("sensor.bambu_lab_a1_task_name", "sensor.bambu_lab_a1_gcode_file")
+	for _, want := range []string{
+		"states('sensor.bambu_lab_a1_task_name')",
+		"states('sensor.bambu_lab_a1_gcode_file')",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("job name template missing %q.\ngot: %s", want, got)
 		}
 	}
 }

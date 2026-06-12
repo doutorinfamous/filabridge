@@ -46,6 +46,8 @@ type Printer struct {
 	AMSUnits            []AMS    `json:"ams_units"`
 	ExternalSpools      []Tray   `json:"external_spools"`
 	CurrentStageEntity  string   `json:"current_stage_entity,omitempty"`
+	TaskNameEntity      string   `json:"task_name_entity,omitempty"`
+	GcodeFileEntity     string   `json:"gcode_file_entity,omitempty"`
 	PrintWeightEntity   string   `json:"print_weight_entity,omitempty"`
 	PrintProgressEntity string   `json:"print_progress_entity,omitempty"`
 	Registered          bool     `json:"registered,omitempty"`

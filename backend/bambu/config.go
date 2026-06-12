@@ -39,6 +39,25 @@ func buildActiveTrayDetection(allTrays []TrayInfo) string {
 	return expr
 }
 
+// buildJobNameTemplate returns a Jinja expression for the current print job name.
+// ha-bambulab exposes subtask_name as its own sensor (friendly name "Task name"),
+// not as an attribute on print_status.
+func buildJobNameTemplate(taskNameEntity, gcodeFileEntity string) string {
+	if taskNameEntity != "" && gcodeFileEntity != "" {
+		return fmt.Sprintf(
+			"states('%s') | default(states('%s'), true) | default('', true)",
+			taskNameEntity, gcodeFileEntity,
+		)
+	}
+	if taskNameEntity != "" {
+		return fmt.Sprintf("states('%s') | default('', true)", taskNameEntity)
+	}
+	if gcodeFileEntity != "" {
+		return fmt.Sprintf("states('%s') | default('', true)", gcodeFileEntity)
+	}
+	return "''"
+}
+
 func buildFilamentUsageTemplate(printWeightEntity, printProgressEntity string) string {
 	if printWeightEntity == "" || printProgressEntity == "" {
 		return "0"
@@ -171,6 +190,7 @@ func generateAutomationsYAML(prefix string, allTrays []TrayInfo, webhookURL stri
 	if printEndEntity == "" {
 		printEndEntity = printer.CurrentStageEntity
 	}
+	jobNameTemplate := buildJobNameTemplate(printer.TaskNameEntity, printer.GcodeFileEntity)
 
 	return fmt.Sprintf(`automation:
   - id: 'filabridge_update_spool_%s'
@@ -217,7 +237,7 @@ func generateAutomationsYAML(prefix string, allTrays []TrayInfo, webhookURL stri
       name: "{{ state_attr(tray_sensor, 'name') | default('') }}"
       color: "{{ state_attr(tray_sensor, 'color') | default('') }}"
       printer_prefix: "%s"
-      job_name: "{{ state_attr('%s', 'subtask_name') | default('', true) }}"
+      job_name: "{{ %s }}"
     actions:
       - choose:
           - conditions:
@@ -352,7 +372,7 @@ func generateAutomationsYAML(prefix string, allTrays []TrayInfo, webhookURL stri
 		trayEntityLookup,
 		filabridgeEntityPrefix, prefix,
 		prefix,
-		printEndEntity,
+		jobNameTemplate,
 		filabridgeEntityPrefix, prefix, filabridgeEntityPrefix, prefix,
 		filabridgeEntityPrefix,
 		filabridgeEntityPrefix,

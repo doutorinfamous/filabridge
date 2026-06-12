@@ -30,6 +30,7 @@ func getEffectiveTranslationKey(entity homeassistant.EntityRegistryEntry) string
 	knownKeys := []string{
 		"print_status", "print_weight", "print_progress", "print_length",
 		"remaining_time", "start_time", "current_layer", "total_layer", "total_layers",
+		"subtask_name", "task_name", "gcode_file",
 		"tray_1", "tray_2", "tray_3", "tray_4",
 		"external_spool", "humidity_index", "active_tray", "stage",
 	}
@@ -167,11 +168,33 @@ func normalizeBambuState(haState string) string {
 	}
 }
 
-func resolveBambuJobName(printStatus homeassistant.State) string {
-	if name := attrString(printStatus.Attributes, "subtask_name"); name != "" {
+func haSensorStateValue(stateMap map[string]homeassistant.State, entityID string) string {
+	if entityID == "" {
+		return ""
+	}
+	st, ok := stateMap[entityID]
+	if !ok {
+		return ""
+	}
+	value := strings.TrimSpace(st.State)
+	if value == "" || value == "unknown" || value == "unavailable" {
+		return ""
+	}
+	return value
+}
+
+func findTaskNameEntity(findEntity func(string) string) string {
+	if entityID := findEntity("subtask_name"); entityID != "" {
+		return entityID
+	}
+	return findEntity("task_name")
+}
+
+func resolveBambuJobName(stateMap map[string]homeassistant.State, taskNameEntity, gcodeFileEntity string) string {
+	if name := haSensorStateValue(stateMap, taskNameEntity); name != "" {
 		return name
 	}
-	if gcode := attrString(printStatus.Attributes, "gcode_file"); gcode != "" {
+	if gcode := haSensorStateValue(stateMap, gcodeFileEntity); gcode != "" {
 		return filepath.Base(gcode)
 	}
 	return ""
@@ -217,7 +240,11 @@ func enrichBambuPrintJob(printer *Printer, stateMap map[string]homeassistant.Sta
 		return
 	}
 
-	printer.JobName = resolveBambuJobName(printStatus)
+	taskNameEntity := findTaskNameEntity(findEntity)
+	gcodeFileEntity := findEntity("gcode_file")
+	printer.TaskNameEntity = taskNameEntity
+	printer.GcodeFileEntity = gcodeFileEntity
+	printer.JobName = resolveBambuJobName(stateMap, taskNameEntity, gcodeFileEntity)
 
 	if entityID := findEntity("print_progress"); entityID != "" {
 		printer.Progress = parseHAProgressPercent(stateMap[entityID].State)
@@ -480,6 +507,8 @@ func DiscoverPrinters(ha *homeassistant.Client) ([]Printer, error) {
 			AMSUnits:            amsUnits,
 			ExternalSpools:      externalSpools,
 			CurrentStageEntity:  findPrinterEntity("stage"),
+			TaskNameEntity:      findTaskNameEntity(findPrinterEntity),
+			GcodeFileEntity:     findPrinterEntity("gcode_file"),
 			PrintWeightEntity:   findPrinterEntity("print_weight"),
 			PrintProgressEntity: findPrinterEntity("print_progress"),
 		}
