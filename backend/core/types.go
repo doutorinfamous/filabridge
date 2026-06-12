@@ -12,11 +12,31 @@ type ToolheadMapping struct {
 	DisplayName string    `json:"display_name,omitempty"` // Custom toolhead name or empty for default
 }
 
+// PrintErrorInput carries structured data when recording a print processing failure.
+type PrintErrorInput struct {
+	PrinterID   string
+	PrinterName string
+	JobName     string
+	Error       string
+	ToolheadID  int     // -1 when unknown
+	Grams       float64 // 0 when unknown
+}
+
+// Print error resolution actions.
+const (
+	ResolveActionAssignSpool = "assign_spool"
+	ResolveActionDismiss     = "dismiss"
+)
+
 // PrintError represents a failed print processing attempt.
 type PrintError struct {
 	ID           string    `json:"id"`
+	PrinterID    string    `json:"printer_id,omitempty"`
 	PrinterName  string    `json:"printer_name"`
 	Filename     string    `json:"filename"`
+	JobName      string    `json:"job_name,omitempty"`
+	ToolheadID   *int      `json:"toolhead_id,omitempty"`
+	Grams        float64   `json:"grams,omitempty"`
 	Error        string    `json:"error"`
 	Timestamp    time.Time `json:"timestamp"`
 	Acknowledged bool      `json:"acknowledged"`

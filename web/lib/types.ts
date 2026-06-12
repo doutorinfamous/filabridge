@@ -84,8 +84,12 @@ export interface PrintHistoryResponse {
 
 export interface PrintError {
   id: string;
+  printer_id?: string;
   printer_name: string;
   filename: string;
+  job_name?: string;
+  toolhead_id?: number;
+  grams?: number;
   error: string;
   timestamp: string;
   acknowledged: boolean;

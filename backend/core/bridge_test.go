@@ -105,6 +105,12 @@ func TestProcessFilamentUsageUnmappedSpoolAddsError(t *testing.T) {
 	if len(errors) == 0 {
 		t.Fatal("expected print error for unmapped spool")
 	}
+	if errors[0].Grams != 12.5 {
+		t.Fatalf("expected 12.5g on error, got %v", errors[0].Grams)
+	}
+	if errors[0].ToolheadID == nil || *errors[0].ToolheadID != 0 {
+		t.Fatalf("expected toolhead 0 on error, got %v", errors[0].ToolheadID)
+	}
 }
 
 func TestProcessFilamentUsageDoesNotRemapAcrossMappedToolheads(t *testing.T) {

@@ -118,6 +118,7 @@ func (ws *WebServer) setupRoutes() {
 		api.PUT("/printers/:id/toolheads/:toolhead_id", ws.updateToolheadNameHandler)
 		api.POST("/detect_printer", ws.detectPrinterHandler)
 		api.GET("/print-errors", ws.getPrintErrorsHandler)
+		api.POST("/print-errors/:id/resolve", ws.resolvePrintErrorHandler)
 		api.POST("/print-errors/:id/acknowledge", ws.acknowledgePrintErrorHandler)
 		api.GET("/history/jobs", ws.historyJobsHandler)
 		api.GET("/history/jobs/:id", ws.historyJobHandler)

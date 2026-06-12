@@ -185,6 +185,16 @@ export const api = {
       `/api/print-errors/${encodeURIComponent(id)}/acknowledge`,
       { method: "POST" }
     ),
+  resolvePrintError: (
+    id: string,
+    body:
+      | { action: "assign_spool"; spool_id: number }
+      | { action: "dismiss" }
+  ) =>
+    request<{ message: string }>(
+      `/api/print-errors/${encodeURIComponent(id)}/resolve`,
+      { method: "POST", body: JSON.stringify(body) }
+    ),
 
   // Locations
   getLocations: () =>

@@ -94,8 +94,8 @@ func (b *FilamentBridge) FinishPrintJob(printerID, jobName, status string) error
 	}
 
 	res, err := b.DB.Exec(
-		"UPDATE print_jobs SET status = ?, finished_at = ? WHERE printer_id = ? AND job_name = ? AND status = ?",
-		status, time.Now(), printerID, jobName, JobStatusPrinting,
+		"UPDATE print_jobs SET status = ?, finished_at = ? WHERE printer_id = ? AND job_name = ? AND status IN (?, ?)",
+		status, time.Now(), printerID, jobName, JobStatusPrinting, JobStatusFailed,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to finish print job: %w", err)
@@ -191,6 +191,26 @@ func (b *FilamentBridge) GetOrCreateOpenJob(printerID, jobName string) (int64, e
 	return insert.LastInsertId()
 }
 
+// GetLatestPrintJobID returns the most recent print job id for a printer/file.
+func (b *FilamentBridge) GetLatestPrintJobID(printerID, jobName string) (int64, error) {
+	if jobName == "" {
+		return 0, fmt.Errorf("job name is required")
+	}
+
+	var jobID int64
+	err := b.DB.QueryRow(
+		"SELECT id FROM print_jobs WHERE printer_id = ? AND job_name = ? ORDER BY id DESC LIMIT 1",
+		printerID, jobName,
+	).Scan(&jobID)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("failed to find print job: %w", err)
+	}
+	return jobID, nil
+}
+
 // LogToolheadUsage records a filament usage event for a Moonraker toolhead.
 func (b *FilamentBridge) LogToolheadUsage(jobID int64, printerID string, toolheadID, spoolID int, grams float64) error {
 	_, err := b.DB.Exec(
@@ -237,7 +257,14 @@ func (b *FilamentBridge) ProcessFilamentUsage(printerID string, filamentUsage ma
 		if err != nil {
 			errMsg := fmt.Sprintf("error getting toolhead mapping for %s toolhead %d: %v", printerName, toolheadID, err)
 			log.Print(errMsg)
-			b.AddPrintError(printerName, jobName, errMsg)
+			b.AddPrintError(PrintErrorInput{
+				PrinterID:   printerID,
+				PrinterName: printerName,
+				JobName:     jobName,
+				Error:       errMsg,
+				ToolheadID:  toolheadID,
+				Grams:       usedWeight,
+			})
 			continue
 		}
 
@@ -251,7 +278,14 @@ func (b *FilamentBridge) ProcessFilamentUsage(printerID string, filamentUsage ma
 		if err := b.Spoolman.UpdateSpoolUsage(spoolID, usedWeight); err != nil {
 			errMsg := fmt.Sprintf("failed to update spool %d in Spoolman: %v", spoolID, err)
 			log.Printf("Error updating spool %d usage: %v", spoolID, err)
-			b.AddPrintError(printerName, jobName, errMsg)
+			b.AddPrintError(PrintErrorInput{
+				PrinterID:   printerID,
+				PrinterName: printerName,
+				JobName:     jobName,
+				Error:       errMsg,
+				ToolheadID:  toolheadID,
+				Grams:       usedWeight,
+			})
 			continue
 		}
 
@@ -270,7 +304,14 @@ func (b *FilamentBridge) ProcessFilamentUsage(printerID string, filamentUsage ma
 			"G-code indica %.2fg no extruder %d, mas nenhum spool está mapeado no %s. Mapeie o spool no toolhead correto ou configure o extruder certo no Snapmaker Orca.",
 			weight, toolheadID, DefaultToolheadDisplayName(toolheadID),
 		)
-		b.AddPrintError(printerName, jobName, errMsg)
+		b.AddPrintError(PrintErrorInput{
+			PrinterID:   printerID,
+			PrinterName: printerName,
+			JobName:     jobName,
+			Error:       errMsg,
+			ToolheadID:  toolheadID,
+			Grams:       weight,
+		})
 	}
 
 	if updatedCount > 0 {

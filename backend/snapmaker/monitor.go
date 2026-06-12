@@ -114,11 +114,13 @@ func monitorPrinter(b *core.FilamentBridge, printerID string, config core.Printe
 
 			b.Mutex.Lock()
 			b.ProcessingPrints[printerID] = false
-			if err == nil {
-				b.CurrentJobFile[printerID] = ""
-				if markErr := b.FinishPrintJob(printerID, filenameToUse, core.JobStatusCompleted); markErr != nil {
-					log.Printf("Warning: Failed to mark job as processed for %s (%s): %v", config.IPAddress, printerID, markErr)
-				}
+			b.CurrentJobFile[printerID] = ""
+			jobStatus := core.JobStatusCompleted
+			if err != nil {
+				jobStatus = core.JobStatusFailed
+			}
+			if markErr := b.FinishPrintJob(printerID, filenameToUse, jobStatus); markErr != nil {
+				log.Printf("Warning: Failed to mark job as processed for %s (%s): %v", config.IPAddress, printerID, markErr)
 			}
 			b.Mutex.Unlock()
 
@@ -190,7 +192,13 @@ func handlePrintFinished(b *core.FilamentBridge, printerID string, config core.P
 
 	if filename == "" {
 		errorMsg := "no filename available for print processing"
-		b.AddPrintError(printerName, "unknown", errorMsg)
+		b.AddPrintError(core.PrintErrorInput{
+			PrinterID:   printerID,
+			PrinterName: printerName,
+			JobName:     "unknown",
+			Error:       errorMsg,
+			ToolheadID:  -1,
+		})
 		return fmt.Errorf("%s", errorMsg)
 	}
 
@@ -212,7 +220,13 @@ func handlePrintFinished(b *core.FilamentBridge, printerID string, config core.P
 		filamentUsage, err = client.ParseFilamentUsageFromFile(filename, b.Config.PrinterFileDownloadTimeout)
 		if err != nil {
 			errorMsg := fmt.Sprintf("failed to parse G-code for filament usage: %v", err)
-			b.AddPrintError(printerName, filename, errorMsg)
+			b.AddPrintError(core.PrintErrorInput{
+				PrinterID:   printerID,
+				PrinterName: printerName,
+				JobName:     filename,
+				Error:       errorMsg,
+				ToolheadID:  -1,
+			})
 			return fmt.Errorf("%s", errorMsg)
 		}
 
@@ -232,7 +246,13 @@ func handlePrintFinished(b *core.FilamentBridge, printerID string, config core.P
 
 		if len(filamentUsage) == 0 {
 			errorMsg := "no filament usage data found in G-code file or Moonraker print stats"
-			b.AddPrintError(printerName, filename, errorMsg)
+			b.AddPrintError(core.PrintErrorInput{
+				PrinterID:   printerID,
+				PrinterName: printerName,
+				JobName:     filename,
+				Error:       errorMsg,
+				ToolheadID:  -1,
+			})
 			return fmt.Errorf("%s", errorMsg)
 		}
 
@@ -267,7 +287,13 @@ func handlePrintCancelled(b *core.FilamentBridge, printerID string, config core.
 	printerName := core.ResolvePrinterName(config)
 	if filename == "" {
 		errorMsg := "no filename available for cancelled print processing"
-		b.AddPrintError(printerName, "unknown", errorMsg)
+		b.AddPrintError(core.PrintErrorInput{
+			PrinterID:   printerID,
+			PrinterName: printerName,
+			JobName:     "unknown",
+			Error:       errorMsg,
+			ToolheadID:  -1,
+		})
 		return fmt.Errorf("%s", errorMsg)
 	}
 
@@ -275,7 +301,13 @@ func handlePrintCancelled(b *core.FilamentBridge, printerID string, config core.
 	resolution, err := resolvePartialFilamentUsage(b, client, printerID, filename, printerStatus, b.Config.PrinterFileDownloadTimeout)
 	if err != nil {
 		errorMsg := fmt.Sprintf("failed to resolve partial filament usage: %v", err)
-		b.AddPrintError(printerName, filename, errorMsg)
+		b.AddPrintError(core.PrintErrorInput{
+			PrinterID:   printerID,
+			PrinterName: printerName,
+			JobName:     filename,
+			Error:       errorMsg,
+			ToolheadID:  -1,
+		})
 		return fmt.Errorf("%s", errorMsg)
 	}
 

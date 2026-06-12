@@ -691,6 +691,46 @@ func (ws *WebServer) getPrintErrorsHandler(c *gin.Context) {
 	})
 }
 
+type resolvePrintErrorRequest struct {
+	Action  string `json:"action"`
+	SpoolID int    `json:"spool_id"`
+}
+
+// resolvePrintErrorHandler resolves a print error by assigning usage to a spool
+// or dismissing the print without recording filament usage.
+func (ws *WebServer) resolvePrintErrorHandler(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Panic in resolvePrintErrorHandler: %v", r)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
+	}()
+
+	errorID := c.Param("id")
+	if errorID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error ID is required"})
+		return
+	}
+
+	var req resolvePrintErrorRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if req.Action != core.ResolveActionAssignSpool && req.Action != core.ResolveActionDismiss {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action"})
+		return
+	}
+
+	if err := ws.bridge.ResolvePrintError(errorID, req.Action, req.SpoolID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Print error resolved"})
+}
+
 // acknowledgePrintErrorHandler acknowledges a print error.
 func (ws *WebServer) acknowledgePrintErrorHandler(c *gin.Context) {
 	defer func() {

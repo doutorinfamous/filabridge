@@ -753,29 +753,187 @@ func (b *FilamentBridge) AcknowledgePrintError(errorID string) error {
 	return fmt.Errorf("print error not found: %s", errorID)
 }
 
+// ResolvePrintError resolves a pending print error by assigning usage to a spool
+// or dismissing the entire print without recording filament usage.
+func (b *FilamentBridge) ResolvePrintError(errorID, action string, spoolID int) error {
+	b.errorMutex.RLock()
+	pe, exists := b.printErrors[errorID]
+	if !exists || pe.Acknowledged {
+		b.errorMutex.RUnlock()
+		return fmt.Errorf("print error not found: %s", errorID)
+	}
+	b.errorMutex.RUnlock()
+
+	printerID := pe.PrinterID
+	if printerID == "" {
+		var err error
+		printerID, err = b.FindPrinterIDByName(pe.PrinterName)
+		if err != nil {
+			return fmt.Errorf("failed to resolve printer: %w", err)
+		}
+		if printerID == "" {
+			printerID = pe.PrinterName
+		}
+	}
+
+	jobName := pe.Filename
+	if jobName == "" {
+		jobName = pe.JobName
+	}
+
+	switch action {
+	case ResolveActionAssignSpool:
+		if spoolID <= 0 {
+			return fmt.Errorf("spool_id is required")
+		}
+		if pe.Grams <= 0 {
+			return fmt.Errorf("cannot assign spool: no gram amount recorded for this error")
+		}
+		if pe.ToolheadID == nil {
+			return fmt.Errorf("cannot assign spool: no toolhead recorded for this error")
+		}
+
+		if err := b.Spoolman.UpdateSpoolUsage(spoolID, pe.Grams); err != nil {
+			return fmt.Errorf("failed to update spool in Spoolman: %w", err)
+		}
+
+		jobID, err := b.GetLatestPrintJobID(printerID, jobName)
+		if err != nil {
+			return err
+		}
+		if jobID == 0 {
+			jobID, err = b.StartPrintJob(printerID, jobName)
+			if err != nil {
+				return fmt.Errorf("failed to resolve print job: %w", err)
+			}
+		}
+
+		if err := b.LogToolheadUsage(jobID, printerID, *pe.ToolheadID, spoolID, pe.Grams); err != nil {
+			log.Printf("Warning: failed to log toolhead usage during error resolution: %v", err)
+		}
+
+		b.acknowledgePrintErrorByID(errorID)
+		if !b.hasPendingPrintErrors(printerID, jobName) {
+			if err := b.FinishPrintJob(printerID, jobName, JobStatusCompleted); err != nil {
+				return err
+			}
+		}
+		return nil
+
+	case ResolveActionDismiss:
+		b.acknowledgeAllPrintErrors(printerID, jobName)
+		return b.FinishPrintJob(printerID, jobName, JobStatusCompleted)
+
+	default:
+		return fmt.Errorf("unknown action: %s", action)
+	}
+}
+
+func (b *FilamentBridge) acknowledgePrintErrorByID(errorID string) {
+	b.errorMutex.Lock()
+	defer b.errorMutex.Unlock()
+
+	if pe, exists := b.printErrors[errorID]; exists {
+		pe.Acknowledged = true
+		b.printErrors[errorID] = pe
+	}
+}
+
+func (b *FilamentBridge) acknowledgeAllPrintErrors(printerID, jobName string) {
+	b.errorMutex.Lock()
+	defer b.errorMutex.Unlock()
+
+	for id, pe := range b.printErrors {
+		if pe.Acknowledged {
+			continue
+		}
+		if !printErrorMatchesJob(pe, printerID, jobName) {
+			continue
+		}
+		pe.Acknowledged = true
+		b.printErrors[id] = pe
+	}
+}
+
+func (b *FilamentBridge) hasPendingPrintErrors(printerID, jobName string) bool {
+	b.errorMutex.RLock()
+	defer b.errorMutex.RUnlock()
+
+	for _, pe := range b.printErrors {
+		if pe.Acknowledged {
+			continue
+		}
+		if printErrorMatchesJob(pe, printerID, jobName) {
+			return true
+		}
+	}
+	return false
+}
+
+func printErrorMatchesJob(pe PrintError, printerID, jobName string) bool {
+	peJob := pe.Filename
+	if peJob == "" {
+		peJob = pe.JobName
+	}
+	if peJob != jobName {
+		return false
+	}
+	if pe.PrinterID != "" {
+		return pe.PrinterID == printerID
+	}
+	return pe.PrinterName == printerID
+}
+
 // AddPrintError adds a new print error.
-func (b *FilamentBridge) AddPrintError(printerName, filename, errorMsg string) {
+func (b *FilamentBridge) AddPrintError(input PrintErrorInput) {
+	printerName := input.PrinterName
+	jobName := input.JobName
+	if printerName == "" {
+		printerName = input.PrinterID
+	}
+
 	b.errorMutex.Lock()
 	defer b.errorMutex.Unlock()
 
 	for _, existing := range b.printErrors {
-		if !existing.Acknowledged && existing.PrinterName == printerName && existing.Filename == filename && existing.Error == errorMsg {
-			return
+		if existing.Acknowledged {
+			continue
 		}
+		if existing.PrinterName != printerName && existing.PrinterID != input.PrinterID {
+			continue
+		}
+		existingJob := existing.Filename
+		if existingJob == "" {
+			existingJob = existing.JobName
+		}
+		if existingJob != jobName || existing.Error != input.Error {
+			continue
+		}
+		return
 	}
 
 	sanitizedPrinterName := sanitizeErrorID(printerName)
-	sanitizedFilename := sanitizeErrorID(filename)
+	sanitizedFilename := sanitizeErrorID(jobName)
 	errorID := fmt.Sprintf("%s_%s_%d", sanitizedPrinterName, sanitizedFilename, time.Now().Unix())
-	b.printErrors[errorID] = PrintError{
+
+	pe := PrintError{
 		ID:           errorID,
+		PrinterID:    input.PrinterID,
 		PrinterName:  printerName,
-		Filename:     filename,
-		Error:        errorMsg,
+		Filename:     jobName,
+		JobName:      jobName,
+		Grams:        input.Grams,
+		Error:        input.Error,
 		Timestamp:    time.Now(),
 		Acknowledged: false,
 	}
+	if input.ToolheadID >= 0 {
+		toolheadID := input.ToolheadID
+		pe.ToolheadID = &toolheadID
+	}
 
-	log.Printf("⚠️  Print processing failed for %s (%s): %s - Manual Spoolman update required",
-		printerName, filename, errorMsg)
+	b.printErrors[errorID] = pe
+
+	log.Printf("⚠️  Print processing failed for %s (%s): %s - Manual resolution required",
+		printerName, jobName, input.Error)
 }
